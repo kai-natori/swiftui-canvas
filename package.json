@@ -1,0 +1,23 @@
+{
+  "name": "swiftui-canvas",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Assemble SwiftUI screens in the browser with Liquid Glass, and export a prompt for AI coding tools.",
+  "packageManager": "pnpm@12.14.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "lint": "biome lint ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.3",
+    "turbo": "2.11.10",
+    "typescript": "5.9.3",
+    "@types/node": "^26.6.5"
+  }
+}

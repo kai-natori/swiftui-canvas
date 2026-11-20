@@ -1,0 +1,121 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildPrompt > golden output (en) 1`] = `
+"# Fitness Log
+
+Implement the app "Fitness Log" in SwiftUI from the screen designs below. It has 2 screens and 5 parts in total. Build every screen as its own View and wire up the navigation exactly as described.
+
+## Theme
+- Accent: Color(red: 0.204, green: 0.780, blue: 0.349); apply it with .tint on the root.
+- Appearance: light (.preferredColorScheme(.light)).
+- Font design: .fontDesign(.rounded).
+- Shape: capsule shapes (.clipShape(Capsule()) where fitting).
+
+## Screens
+
+### Screen: Screen 1
+- Navigation bar "Home", style: large
+- Text "Welcome", style: largeTitle
+- Button "Continue", style: glassProminent
+  Behaviour: Haptic feedback on tap.
+- List (no text), style: insetGrouped, : "Morning run" (figure.run), "Swim" (figure.pool.swim)
+- Tab bar (TabView) (no text), style: plain, : "Home" (house) → Screen 1, "Stats" (chart.bar) → Stats, initially selected: #1
+
+### Screen: Stats
+
+## Navigation and behaviour
+- Button "Continue" (Screen 1) opens Stats (transition: zoom).
+- Tab bar (TabView) (no text) (Screen 1) / "Home" opens Screen 1 (transition: push).
+- Tab bar (TabView) (no text) (Screen 1) / "Stats" opens Stats (transition: push).
+
+## API baseline
+Build it in SwiftUI with a deployment target of iOS 26.0, Swift 6.2 on the latest SDK. Modern APIs only:
+- Navigate with NavigationStack and TabView + Tab (never the deprecated NavigationView); search with .searchable.
+- Leave room for the system status bar (~59pt) at the top and the home indicator (~34pt) at the bottom; do not build them yourself, just respect the safe areas.
+- Toolbar and bar buttons render as Liquid Glass automatically on iOS 26; for custom glass controls use .glassEffect(), GlassEffectContainer, buttonStyle(.glass) or (.glassProminent).
+- Use .scrollEdgeEffectStyle for scroll edge effects. Zoom transitions use .navigationTransition(.zoom(sourceID:in:)).
+- Model state with @Observable; colour views with foregroundStyle (not foregroundColor).
+- All icons are SF Symbols: put the given names verbatim into Image(systemName:).
+- Use the exact strings given in this prompt for all labels (do not translate them); give icon-only controls accessibility labels.
+"
+`;
+
+exports[`buildPrompt > golden output (ja) 1`] = `
+"# Fitness Log
+
+アプリ「Fitness Log」を、以下の画面設計どおりに SwiftUI で実装してください。画面は 2 枚、部品は合計 5 個です。各画面を個別の View として作り、遷移は説明どおりに配線してください。
+
+## テーマ
+- 強調色: Color(red: 0.204, green: 0.780, blue: 0.349)。ルートに .tint で適用する。
+- 外観: ライト（.preferredColorScheme(.light)）。
+- フォントデザイン: .fontDesign(.rounded)。
+- 形状: カプセル形（適する場所では .clipShape(Capsule())）。
+
+## 画面
+
+### 画面: Screen 1
+- ナビゲーションバー "Home", style: large
+- テキスト "Welcome", style: largeTitle
+- ボタン "Continue", style: glassProminent
+  振る舞い: Haptic feedback on tap.
+- List （文字なし）, style: insetGrouped, : "Morning run" (figure.run), "Swim" (figure.pool.swim)
+- タブバー（TabView） （文字なし）, style: plain, : "Home" (house) → Screen 1, "Stats" (chart.bar) → Stats, 初期選択: 1 番目
+
+### 画面: Stats
+
+## 遷移と振る舞い
+- ボタン "Continue" (Screen 1) は Stats を開く（遷移: zoom）。
+- タブバー（TabView） （文字なし） (Screen 1) / "Home" は Screen 1 を開く（遷移: push）。
+- タブバー（TabView） （文字なし） (Screen 1) / "Stats" は Stats を開く（遷移: push）。
+
+## API baseline
+SwiftUIで実装すること。deployment target は iOS 26.0、Swift 6.2 / 最新SDKを使い、モダンなAPIのみを使う：
+- ナビゲーションは NavigationStack と TabView + Tab を使う（廃止された NavigationView は使わない）。検索は .searchable を使う。
+- 画面上部にはシステムのステータスバー（約59pt）、下部にはホームインジケータ（約34pt）の安全領域を空ける。自分で実装せず、安全領域を尊重するだけでよい。
+- ツールバーとバー内のボタンは iOS 26 で自動的に Liquid Glass になる。カスタムのガラス要素には .glassEffect()、GlassEffectContainer、buttonStyle(.glass) / (.glassProminent) を使う。
+- スクロールの端の表現には .scrollEdgeEffectStyle を使う。ズーム遷移は .navigationTransition(.zoom(sourceID:in:)) を使う。
+- 状態のモデルは @Observable で表す。色は foregroundStyle で付ける（foregroundColor は使わない）。
+- アイコンはすべて SF Symbols とし、プロンプトに書かれた名前をそのまま Image(systemName:) に入れる。
+- 表示文字列はプロンプトに書かれた原文をそのまま使う（翻訳しない）。アイコンのみのボタンには VoiceOver 用のラベルを付ける。
+"
+`;
+
+exports[`buildPrompt > golden output (zh) 1`] = `
+"# Fitness Log
+
+请按照下面的屏幕设计，用 SwiftUI 实现应用“Fitness Log”。共 2 个屏幕、5 个组件。每个屏幕做成独立的 View，跳转严格按说明连接。
+
+## 主题
+- 强调色：Color(red: 0.204, green: 0.780, blue: 0.349)，在根视图用 .tint 应用。
+- 外观：浅色（.preferredColorScheme(.light)）。
+- 字体设计：.fontDesign(.rounded)。
+- 形状：胶囊形（合适处使用 .clipShape(Capsule())）。
+
+## 屏幕
+
+### 屏幕: Screen 1
+- 导航栏 “Home”, style: large
+- 文本 “Welcome”, style: largeTitle
+- 按钮 “Continue”, style: glassProminent
+  行为: Haptic feedback on tap.
+- List 列表 （无文字）, style: insetGrouped, ：“Morning run” (figure.run), “Swim” (figure.pool.swim)
+- 标签栏（TabView） （无文字）, style: plain, ：“Home” (house) → Screen 1, “Stats” (chart.bar) → Stats, ，初始选中第 1 项
+
+### 屏幕: Stats
+
+## 跳转与行为
+- 按钮 “Continue” (Screen 1) 打开 Stats（过渡: zoom）。
+- 标签栏（TabView） （无文字） (Screen 1) / “Home” 打开 Screen 1（过渡: push）。
+- 标签栏（TabView） （无文字） (Screen 1) / “Stats” 打开 Stats（过渡: push）。
+
+## API baseline
+用 SwiftUI 实现，deployment target 为 iOS 26.0，Swift 6.2 / 最新 SDK，只使用现代 API：
+- 导航使用 NavigationStack 与 TabView + Tab（不要使用已废弃的 NavigationView）；搜索使用 .searchable。
+- 屏幕顶部留出系统状态栏（约 59pt），底部留出主屏指示条（约 34pt）的安全区域；不需要自己实现，尊重安全区域即可。
+- 工具栏与栏内按钮在 iOS 26 会自动呈现 Liquid Glass；自定义玻璃元素使用 .glassEffect()、GlassEffectContainer、buttonStyle(.glass) / (.glassProminent)。
+- 滚动边缘效果使用 .scrollEdgeEffectStyle；缩放过渡使用 .navigationTransition(.zoom(sourceID:in:))。
+- 状态模型使用 @Observable；颜色使用 foregroundStyle（不要使用 foregroundColor）。
+- 图标一律使用 SF Symbols，将提示词中给出的名称原样放入 Image(systemName:)。
+- 显示文字使用提示词给出的原文（不要翻译）；仅图标按钮要补上 VoiceOver 标签。
+"
+`;

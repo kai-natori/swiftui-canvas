@@ -1,0 +1,170 @@
+import type { Kind, Lang, Transition, Variant } from "@swiftui-canvas/core";
+
+/* Editor i18n (editor-ui spec): every user-facing editor string lives in
+ * this table in en / ja / zh; components never hard-code copy. The
+ * document's own content strings (part labels etc.) are user data, not
+ * UI copy, and are not translated here. */
+
+const STRINGS = {
+  "app.name": { en: "SwiftUI Canvas", ja: "SwiftUI Canvas", zh: "SwiftUI Canvas" },
+  "toolbar.undo": { en: "Undo", ja: "元に戻す", zh: "撤销" },
+  "toolbar.redo": { en: "Redo", ja: "やり直す", zh: "重做" },
+  "toolbar.addScreen": { en: "Add screen", ja: "画面を追加", zh: "添加页面" },
+  "toolbar.tidy": { en: "Tidy", ja: "整列", zh: "整理" },
+  "toolbar.preview": { en: "Preview", ja: "プレビュー", zh: "预览" },
+  "toolbar.prompt": { en: "Prompt", ja: "プロンプト", zh: "提示词" },
+  "toolbar.share": { en: "Share", ja: "共有", zh: "分享" },
+  "toolbar.save": { en: "Save JSON", ja: "JSONを保存", zh: "保存 JSON" },
+  "toolbar.open": { en: "Open", ja: "開く", zh: "打开" },
+  "toolbar.lab": { en: "Glass Lab", ja: "ガラス実験", zh: "玻璃实验" },
+  "toolbar.editor": { en: "Editor", ja: "エディタ", zh: "编辑器" },
+  "toolbar.linkCopied": { en: "Share link copied", ja: "共有リンクをコピーしました", zh: "已复制分享链接" },
+  "toolbar.zoomIn": { en: "Zoom in", ja: "拡大", zh: "放大" },
+  "toolbar.zoomOut": { en: "Zoom out", ja: "縮小", zh: "缩小" },
+  "toolbar.fit": { en: "Fit", ja: "全体表示", zh: "适应" },
+  "palette.title": { en: "Parts", ja: "部品", zh: "组件" },
+  "palette.bars": { en: "Bars", ja: "バー", zh: "栏" },
+  "palette.controls": { en: "Controls", ja: "コントロール", zh: "控件" },
+  "palette.input": { en: "Input", ja: "入力", zh: "输入" },
+  "palette.display": { en: "Display", ja: "表示", zh: "显示" },
+  "palette.modal": { en: "Modal", ja: "モーダル", zh: "模态" },
+  "inspector.part": { en: "Part", ja: "部品", zh: "组件" },
+  "inspector.screen": { en: "Screen", ja: "画面", zh: "页面" },
+  "inspector.document": { en: "Document", ja: "ドキュメント", zh: "文档" },
+  "inspector.label": { en: "Label", ja: "ラベル", zh: "标签" },
+  "inspector.supporting": { en: "Supporting text", ja: "補足テキスト", zh: "辅助文本" },
+  "inspector.icon": { en: "Icon (SF Symbol)", ja: "アイコン (SF Symbol)", zh: "图标 (SF Symbol)" },
+  "inspector.variant": { en: "Style", ja: "スタイル", zh: "样式" },
+  "inspector.options": { en: "Options", ja: "選択肢", zh: "选项" },
+  "inspector.optionLabel": { en: "Option label", ja: "選択肢のラベル", zh: "选项标签" },
+  "inspector.optionTarget": { en: "Opens screen", ja: "遷移先の画面", zh: "打开页面" },
+  "inspector.addOption": { en: "Add option", ja: "選択肢を追加", zh: "添加选项" },
+  "inspector.removeOption": { en: "Remove", ja: "削除", zh: "删除" },
+  "inspector.checked": { en: "On", ja: "オン", zh: "开" },
+  "inspector.selected": { en: "Selected", ja: "選択中", zh: "已选" },
+  "inspector.value": { en: "Value", ja: "値", zh: "值" },
+  "inspector.note": { en: "Behaviour note", ja: "振る舞いメモ", zh: "行为备注" },
+  "inspector.link": { en: "Tap navigation", ja: "タップ遷移", zh: "点击跳转" },
+  "inspector.linkTarget": { en: "Target", ja: "遷移先", zh: "目标" },
+  "inspector.transition": { en: "Transition", ja: "遷移の種類", zh: "转场" },
+  "inspector.presents": { en: "Presents", ja: "表示するモーダル", zh: "呈现" },
+  "inspector.position": { en: "Position & size", ja: "位置とサイズ", zh: "位置与尺寸" },
+  "inspector.none": { en: "None", ja: "なし", zh: "无" },
+  "inspector.back": { en: "Back", ja: "戻る", zh: "返回" },
+  "inspector.name": { en: "Name", ja: "名前", zh: "名称" },
+  "inspector.background": { en: "Background", ja: "背景", zh: "背景" },
+  "inspector.chrome": { en: "System chrome", ja: "ステータスバー等", zh: "系统栏" },
+  "inspector.duplicate": { en: "Duplicate", ja: "複製", zh: "复制" },
+  "inspector.delete": { en: "Delete", ja: "削除", zh: "删除" },
+  "inspector.title": { en: "App title", ja: "アプリ名", zh: "应用名" },
+  "inspector.screens": { en: "screens", ja: "画面", zh: "页面" },
+  "inspector.parts": { en: "parts", ja: "部品", zh: "组件" },
+  "inspector.selectHint": {
+    en: "Select a part or a screen to edit it. Drag parts from the palette onto a screen.",
+    ja: "部品や画面を選ぶとここで編集できます。部品はパレットから画面へドラッグしてください。",
+    zh: "选择组件或页面后可在此编辑。从组件库把组件拖到页面上。",
+  },
+  "theme.title": { en: "Theme", ja: "テーマ", zh: "主题" },
+  "theme.accent": { en: "Accent", ja: "アクセント", zh: "强调色" },
+  "theme.custom": { en: "Custom", ja: "カスタム", zh: "自定义" },
+  "theme.scheme": { en: "Appearance", ja: "外観", zh: "外观" },
+  "theme.light": { en: "Light", ja: "ライト", zh: "浅色" },
+  "theme.dark": { en: "Dark", ja: "ダーク", zh: "深色" },
+  "theme.shape": { en: "Shape", ja: "形状", zh: "形状" },
+  "theme.shapeDefault": { en: "Default", ja: "標準", zh: "默认" },
+  "theme.shapeCapsule": { en: "Capsule", ja: "カプセル", zh: "胶囊" },
+  "theme.font": { en: "Font design", ja: "フォント", zh: "字体" },
+  "theme.fontSystem": { en: "System", ja: "システム", zh: "系统" },
+  "theme.fontRounded": { en: "Rounded", ja: "丸み", zh: "圆体" },
+  "theme.fontSerif": { en: "Serif", ja: "明朝", zh: "衬线" },
+  "theme.fontMono": { en: "Monospaced", ja: "等幅", zh: "等宽" },
+  "bg.system": { en: "System", ja: "システム", zh: "系统" },
+  "bg.secondary": { en: "Secondary", ja: "セカンダリ", zh: "次级" },
+  "bg.grouped": { en: "Grouped", ja: "グループ", zh: "分组" },
+  "prompt.title": { en: "AI coding prompt", ja: "AIコーディング用プロンプト", zh: "AI 编程提示词" },
+  "prompt.language": { en: "Prompt language", ja: "プロンプトの言語", zh: "提示词语言" },
+  "prompt.whole": { en: "Whole app", ja: "アプリ全体", zh: "整个应用" },
+  "prompt.screen": { en: "This screen", ja: "この画面だけ", zh: "仅此页面" },
+  "prompt.copy": { en: "Copy prompt", ja: "プロンプトをコピー", zh: "复制提示词" },
+  "prompt.copied": { en: "Copied", ja: "コピーしました", zh: "已复制" },
+  "prompt.close": { en: "Close", ja: "閉じる", zh: "关闭" },
+  "preview.close": { en: "Close preview", ja: "プレビューを閉じる", zh: "关闭预览" },
+  "preview.back": { en: "Back", ja: "戻る", zh: "返回" },
+  "warnings.title": { en: "The shared design needed repairs:", ja: "共有されたデザインを修復しました:", zh: "分享的设计已自动修复：" },
+  "warnings.dismiss": { en: "Dismiss", ja: "閉じる", zh: "关闭" },
+  "canvas.dropHint": { en: "Drop on a screen", ja: "画面にドロップ", zh: "拖到页面上" },
+} as const;
+
+export type StringKey = keyof typeof STRINGS;
+
+export function t(lang: Lang, key: StringKey): string {
+  return STRINGS[key][lang];
+}
+
+export const KIND_NAMES: Record<Lang, Record<Kind, string>> = {
+  en: {
+    navBar: "Navigation bar", tabBar: "Tab bar", searchField: "Search field",
+    button: "Button", iconButton: "Icon button", menu: "Menu", link: "Link",
+    textField: "Text field", secureField: "Secure field", toggle: "Toggle",
+    slider: "Slider", stepper: "Stepper", segmented: "Segmented control",
+    picker: "Picker", text: "Text", image: "Image", list: "List", card: "Card",
+    divider: "Divider", progress: "Progress", alert: "Alert", sheet: "Sheet",
+    box: "Container", contentUnavailable: "Empty state",
+  },
+  ja: {
+    navBar: "ナビゲーションバー", tabBar: "タブバー", searchField: "検索フィールド",
+    button: "ボタン", iconButton: "アイコンボタン", menu: "メニュー", link: "リンク",
+    textField: "テキストフィールド", secureField: "パスワード入力", toggle: "トグル",
+    slider: "スライダー", stepper: "ステッパー", segmented: "セグメント",
+    picker: "ピッカー", text: "テキスト", image: "画像", list: "リスト", card: "カード",
+    divider: "区切り線", progress: "プログレス", alert: "アラート", sheet: "シート",
+    box: "コンテナ", contentUnavailable: "空状態",
+  },
+  zh: {
+    navBar: "导航栏", tabBar: "标签栏", searchField: "搜索框",
+    button: "按钮", iconButton: "图标按钮", menu: "菜单", link: "链接",
+    textField: "文本框", secureField: "密码框", toggle: "开关",
+    slider: "滑块", stepper: "步进器", segmented: "分段选择器",
+    picker: "选择器", text: "文本", image: "图片", list: "列表", card: "卡片",
+    divider: "分割线", progress: "进度", alert: "提醒", sheet: "半屏页",
+    box: "容器", contentUnavailable: "空状态",
+  },
+};
+
+export const VARIANT_NAMES: Record<Lang, Partial<Record<Variant, string>>> = {
+  en: {
+    plain: "Plain", bordered: "Bordered", borderedProminent: "Bordered prominent",
+    glass: "Glass", glassProminent: "Glass prominent", roundedBorder: "Rounded border",
+    insetGrouped: "Inset grouped", plainList: "Plain list", large: "Large title",
+    inline: "Inline", filled: "Filled", stroke: "Stroke", background: "Background",
+    secondary: "Secondary", tertiary: "Tertiary", linear: "Linear", circular: "Circular",
+    largeTitle: "Large title", title: "Title", headline: "Headline", body: "Body",
+    callout: "Callout", footnote: "Footnote", caption: "Caption",
+  },
+  ja: {
+    plain: "プレーン", bordered: "枠線", borderedProminent: "枠線（強調）",
+    glass: "ガラス", glassProminent: "ガラス（強調）", roundedBorder: "角丸の枠",
+    insetGrouped: "インセットグループ", plainList: "プレーンリスト", large: "大きなタイトル",
+    inline: "インライン", filled: "塗り", stroke: "枠線のみ", background: "背景",
+    secondary: "セカンダリ", tertiary: "ターシャリ", linear: "線形", circular: "円形",
+    largeTitle: "大タイトル", title: "タイトル", headline: "見出し", body: "本文",
+    callout: "コールアウト", footnote: "脚注", caption: "キャプション",
+  },
+  zh: {
+    plain: "朴素", bordered: "边框", borderedProminent: "边框（强调）",
+    glass: "玻璃", glassProminent: "玻璃（强调）", roundedBorder: "圆角边框",
+    insetGrouped: "内嵌分组", plainList: "普通列表", large: "大标题",
+    inline: "居中标题", filled: "填充", stroke: "描边", background: "背景",
+    secondary: "次级", tertiary: "三级", linear: "线性", circular: "圆形",
+    largeTitle: "大标题", title: "标题", headline: "标题二", body: "正文",
+    callout: "标注", footnote: "脚注", caption: "说明",
+  },
+};
+
+export const TRANSITION_NAMES: Record<Lang, Record<Transition, string>> = {
+  en: { push: "Push", zoom: "Zoom", sheet: "Sheet", cover: "Full-screen cover", none: "None" },
+  ja: { push: "プッシュ", zoom: "ズーム", sheet: "シート", cover: "全画面カバー", none: "なし" },
+  zh: { push: "推入", zoom: "缩放", sheet: "半屏", cover: "全屏覆盖", none: "无" },
+};
+
+export const LANG_NAMES: Record<Lang, string> = { en: "English", ja: "日本語", zh: "中文" };

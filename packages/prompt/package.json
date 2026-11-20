@@ -1,0 +1,1 @@
+{"dependencies":{"@swiftui-canvas/core":"workspace:*"},"devDependencies":{"typescript":"5.9.3","vitest":"5.0.5"},"exports":{".":"./src/index.ts"},"name":"@swiftui-canvas/prompt","private":true,"scripts":{"test":"vitest run","typecheck":"tsc --noEmit"},"type":"module","version":"0.1.0"}

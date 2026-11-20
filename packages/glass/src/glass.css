@@ -1,0 +1,319 @@
+/* Liquid Glass material — SwiftUI Canvas.
+ *
+ * Three layers (design D4):
+ *  1. Rim refraction: an SVG displacement filter in backdrop-filter
+ *     (Chromium only; applied to a dedicated overlay element so browsers
+ *     without url() support simply skip it and keep the layers below).
+ *  2. Frost: backdrop blur + saturate + brightness with a translucent tint.
+ *  3. Surface: specular top-edge highlight, inner shadow, 0.5px bright
+ *     border, soft outer drop shadow.
+ *
+ * Tokens are system colours in the iOS palette, for light and dark.
+ * Anything carrying glass sets data-scheme on an ancestor (or itself)
+ * to pick the scheme; the default is light.
+ */
+
+.sc-root,
+[data-scheme="light"] {
+  --sc-label: #000000;
+  --sc-secondary-label: rgba(60, 60, 67, 0.6);
+  --sc-tertiary-label: rgba(60, 60, 67, 0.3);
+  --sc-system-background: #ffffff;
+  --sc-secondary-background: #f2f2f7;
+  --sc-grouped-background: #f2f2f7;
+  --sc-separator: rgba(60, 60, 67, 0.29);
+  --sc-fill: rgba(120, 120, 128, 0.2);
+  --sc-accent: #007aff;
+
+  --sc-glass-tint: rgba(255, 255, 255, 0.42);
+  --sc-glass-tint-strong: rgba(255, 255, 255, 0.62);
+  --sc-glass-border: rgba(255, 255, 255, 0.65);
+  --sc-glass-highlight: rgba(255, 255, 255, 0.9);
+  --sc-glass-shadow: rgba(0, 0, 0, 0.18);
+  --sc-glass-blur: 20px;
+  --sc-glass-saturate: 180%;
+  --sc-glass-brightness: 1.06;
+}
+
+[data-scheme="dark"] {
+  --sc-label: #ffffff;
+  --sc-secondary-label: rgba(235, 235, 245, 0.6);
+  --sc-tertiary-label: rgba(235, 235, 245, 0.3);
+  --sc-system-background: #000000;
+  --sc-secondary-background: #1c1c1e;
+  --sc-grouped-background: #111113;
+  --sc-separator: rgba(84, 84, 88, 0.65);
+  --sc-fill: rgba(120, 120, 128, 0.32);
+  --sc-accent: #0a84ff;
+
+  --sc-glass-tint: rgba(44, 44, 48, 0.42);
+  --sc-glass-tint-strong: rgba(64, 64, 70, 0.6);
+  --sc-glass-border: rgba(255, 255, 255, 0.22);
+  --sc-glass-highlight: rgba(255, 255, 255, 0.28);
+  --sc-glass-shadow: rgba(0, 0, 0, 0.45);
+}
+
+/* SF-style system font stack (SF Symbols themselves are not embedded;
+ * icons are drawn by callers). */
+.sc-font {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Helvetica Neue", "Hiragino Sans", "Noto Sans JP", "Noto Sans SC",
+    Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* --- the glass surface ------------------------------------------------ */
+
+.sc-glass {
+  position: relative;
+  background: var(--sc-glass-tint);
+  -webkit-backdrop-filter: blur(var(--sc-glass-blur)) saturate(var(--sc-glass-saturate))
+    brightness(var(--sc-glass-brightness));
+  backdrop-filter: blur(var(--sc-glass-blur)) saturate(var(--sc-glass-saturate))
+    brightness(var(--sc-glass-brightness));
+  border: 0.5px solid var(--sc-glass-border);
+  box-shadow:
+    0 8px 32px var(--sc-glass-shadow),
+    0 1px 4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 var(--sc-glass-highlight),
+    inset 0 -0.5px 0 rgba(255, 255, 255, 0.12);
+  color: var(--sc-label);
+  overflow: hidden;
+}
+
+/* Specular sheen across the top of the surface. */
+.sc-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.22) 0%,
+    rgba(255, 255, 255, 0.05) 42%,
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+/* Layer 1 overlay: refraction. Where backdrop-filter url() is not
+ * supported this element contributes nothing and the frost remains. */
+.sc-glass__refract {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.sc-glass__content {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  height: 100%;
+}
+
+/* --- tab bar ------------------------------------------------------------ */
+
+.sc-tabbar {
+  border-radius: 999px;
+  height: 62px;
+}
+
+.sc-tabbar__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: none;
+  background: transparent;
+  color: var(--sc-secondary-label);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 2px;
+  position: relative;
+  z-index: 0;
+}
+
+.sc-tabbar__item[data-selected="true"] {
+  color: var(--sc-accent);
+}
+
+/* The brighter glass pill under the selected tab. */
+.sc-tabbar__item[data-selected="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 5px 6px;
+  border-radius: 999px;
+  background: var(--sc-glass-tint-strong);
+  box-shadow:
+    inset 0 1px 0 var(--sc-glass-highlight),
+    0 1px 6px rgba(0, 0, 0, 0.1);
+  z-index: -1;
+}
+
+.sc-tabbar__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+}
+
+/* --- buttons ------------------------------------------------------------ */
+
+.sc-glass-button {
+  border-radius: 999px;
+  min-height: 50px;
+  padding: 0 22px;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sc-glass-button[data-variant="glassProminent"] {
+  background: color-mix(in srgb, var(--sc-accent) 72%, transparent);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+
+.sc-glass-button:active {
+  transform: scale(0.98);
+}
+
+.sc-toolbar-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sc-label);
+  flex: none;
+}
+
+.sc-toolbar-button .sc-glass__content {
+  align-items: center;
+  justify-content: center;
+}
+
+.sc-toolbar-button:active {
+  transform: scale(0.94);
+}
+
+/* --- alert -------------------------------------------------------------- */
+
+.sc-alert {
+  display: block;
+}
+
+.sc-alert .sc-glass__content {
+  flex-direction: column;
+}
+
+.sc-alert__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 18px 16px 12px;
+  gap: 5px;
+}
+
+.sc-alert__title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--sc-label);
+}
+
+.sc-alert__message {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--sc-label);
+}
+
+.sc-alert__actions {
+  display: grid;
+  border-top: 0.5px solid var(--sc-separator);
+}
+
+.sc-alert__action {
+  all: unset;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  color: var(--sc-accent);
+  cursor: pointer;
+  border-left: 0.5px solid var(--sc-separator);
+}
+
+.sc-alert__action:first-child {
+  border-left: none;
+}
+
+.sc-alert__action[data-role="cancel"] {
+  font-weight: 600;
+}
+
+.sc-alert__action[data-role="destructive"] {
+  color: #ff3b30;
+}
+
+/* --- sheet -------------------------------------------------------------- */
+
+.sc-sheet {
+  border-radius: 28px 28px 0 0;
+  display: block;
+}
+
+.sc-sheet .sc-glass__content {
+  flex-direction: column;
+}
+
+.sc-sheet__grabber {
+  width: 36px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--sc-tertiary-label);
+  margin: 8px auto 4px;
+  flex: none;
+}
+
+.sc-sheet__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 0.5px solid var(--sc-glass-border);
+  background: var(--sc-fill);
+  color: var(--sc-secondary-label);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.sc-sheet__content {
+  flex: 1;
+  padding: 6px 20px 20px;
+  overflow: hidden;
+}

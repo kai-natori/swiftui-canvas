@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "swiftui-canvas",
+  "compatibility_date": "2025-09-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "worker.ts",
+  "observability": {
+    "enabled": true
+  },
+  // Workers Static Assets: dist/client (built by `vite build` in SPA
+  // mode, including the prerendered shell) is served through the ASSETS
+  // binding. Requests that match a file are served statically; anything
+  // else reaches worker.ts, which answers with the SPA shell
+  // (_shell.html) so client-side routes like /glass-lab work.
+  "assets": {
+    "directory": "./dist/client",
+    "binding": "ASSETS"
+  },
+  // No custom domain yet (domain undecided — openspec design Q2):
+  // deploying exposes the worker on its workers.dev subdomain only.
+  "workers_dev": true
+}
