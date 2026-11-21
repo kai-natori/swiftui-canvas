@@ -23,6 +23,41 @@ import {
 
 export const snap = (v: number): number => Math.round(v / GRID) * GRID;
 
+export function autoPlacePart(doc: Doc, screenId: string, part: Part): { x: number; y: number } {
+  const screen = doc.screens.find((s) => s.id === screenId);
+  const parts = partsOf(doc, screenId);
+  const height = (p: Part) => p.h ?? partSize(p.kind, p).h;
+  const width = (p: Part) => p.w ?? partSize(p.kind, p).w;
+  const top = Math.max(
+    screen?.chrome ? CHROME_TOP : 0,
+    ...parts.filter((p) => p.kind === "navBar").map((p) => p.y + height(p)),
+  ) + MARGIN;
+  const bottom = Math.min(
+    SCREEN_H - (screen?.chrome ? CHROME_BOTTOM : 0),
+    ...parts.filter((p) => p.kind === "tabBar").map((p) => p.y),
+  ) - MARGIN;
+  const x = MARGIN;
+  const h = height(part);
+  const firstY = Math.ceil(top / GRID) * GRID;
+  const lastY = Math.max(firstY, Math.floor((bottom - h) / GRID) * GRID);
+  const occupied = parts
+    .filter((p) => p.kind !== "navBar" && p.kind !== "tabBar" && p.kind !== "sheet" &&
+      p.x < x + width(part) && p.x + width(p) > x &&
+      p.y < bottom && p.y + height(p) > top)
+    .sort((a, b) => a.y - b.y);
+  const after = occupied.length
+    ? Math.ceil((Math.max(...occupied.map((p) => p.y + height(p))) + MARGIN) / GRID) * GRID
+    : firstY;
+  if (after + h <= bottom) return { x, y: after };
+  let cursor = firstY;
+  for (const p of occupied) {
+    if (cursor + h + MARGIN <= p.y) return { x, y: cursor };
+    cursor = Math.max(cursor, Math.ceil((p.y + height(p) + MARGIN) / GRID) * GRID);
+  }
+  // A full screen may require overlap, but never place below its content bounds.
+  return { x, y: lastY };
+}
+
 export interface SnapResult {
   x: number;
   y: number;
