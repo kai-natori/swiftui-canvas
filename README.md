@@ -2,6 +2,8 @@
 
 **開発版 / Development Preview**
 
+**Live demo / 公開中**: [kai-natori.github.io/swiftui-canvas](https://kai-natori.github.io/swiftui-canvas/) （ミラー: [swiftui-canvas.otobase.workers.dev](https://swiftui-canvas.otobase.workers.dev/)）
+
 MuseにiOSアプリのUI参考画像を作ってもらうために、画面の構成や部品を具体的に伝えられるようにしたい。そんな開発者自身の用途から作った、ブラウザで使えるUI構成ツールです。
 
 SwiftUI風の部品を並べ、画面をつなぎ、プレビューで操作を確かめられます。組み立てた画面を参考画像として共有したり、画面構成を説明するプロンプトをコピーしてAIコーディングツールに渡したりできます。
@@ -115,7 +117,9 @@ pnpm build
 
 ## 公開（GitHub Pages）
 
-開発版の公開先としてGitHub Pagesを想定しています。このリポジトリでは、公開後のURLは `https://kai-natori.github.io/swiftui-canvas/` になります。
+開発版はGitHub Pagesで公開しています: https://kai-natori.github.io/swiftui-canvas/
+
+`main`ブランチへのpushで、GitHub Actionsが自動でビルドとデプロイを行います（このリポジトリでは、GitHub Actionsを使わない方針の例外としてオーナーが承認しています）。Cloudflare Workers版（https://swiftui-canvas.otobase.workers.dev/）はミラーで、API経由の再デプロイスクリプトで手動更新します。
 
 まずリポジトリのルートでビルドします。
 
@@ -127,7 +131,7 @@ pnpm build:pages
 
 このコマンドはローカルでビルドするだけで、GitHubへは送信しません。独自ドメインなどでルートに配信する場合は、`pnpm build:pages /`でビルドできます。
 
-GitHub Actionsは追加せず、`gh-pages`ブランチから手動で公開します。以下は、`gh-pages`ブランチをまだ作っていない場合の初回手順です。`git worktree add --orphan`に対応したGitと`rsync`を使用します。
+現在の公開は上記のGitHub Actionsによる自動デプロイです。以下は、手動で`gh-pages`ブランチから公開する場合の手順（現在は使っていません）で、`gh-pages`ブランチをまだ作っていない場合の初回手順です。`git worktree add --orphan`に対応したGitと`rsync`を使用します。
 
 ```bash
 # 初回だけ：公開用ブランチを別の作業ディレクトリに作成
