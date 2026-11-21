@@ -265,6 +265,50 @@ export function SwiftPart(props: SwiftPartProps) {
       );
     }
 
+    case "gauge": {
+      const value = Math.min(1, Math.max(0, part.value ?? 0.65));
+      const percent = Math.round(value * 100);
+      if (v === "accessoryCircular") return (
+        <div style={{ width: w, height: h, display: "grid", placeItems: "center", color: label }}>
+          <div style={{ position: "relative", width: 64, height: 64 }}>
+            <svg viewBox="0 0 64 64" width="64" height="64" aria-label={part.label}>
+              <circle cx="32" cy="32" r="27" fill="none" stroke={fill} strokeWidth="6" strokeDasharray="127 170" transform="rotate(135 32 32)" />
+              <circle cx="32" cy="32" r="27" fill="none" stroke={accent} strokeWidth="6" strokeLinecap="round" strokeDasharray={`${value * 127} 170`} transform="rotate(135 32 32)" />
+            </svg>
+            <span style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", fontSize: 20, fontWeight: 600 }}>{percent}</span>
+          </div>
+          <span style={{ fontSize: 11 }}>{part.label}</span>
+        </div>
+      );
+      return (
+        <div style={{ width: w, height: h, color: label, display: "flex", flexDirection: "column", justifyContent: "center", gap: 8 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 15 }}><span>{part.label}</span><span>{percent}%</span></div>
+          <div style={{ height: 7, borderRadius: 999, background: fill, overflow: "hidden" }}><div style={{ width: `${percent}%`, height: "100%", background: accent, borderRadius: 999 }} /></div>
+        </div>
+      );
+    }
+    case "datePicker": {
+      const date = new Date(part.date ?? "2026-11-21T09:41");
+      const locale = props.doc.lang === "ja" ? "ja-JP" : props.doc.lang === "zh" ? "zh-CN" : "en-US";
+      const components = part.displayedComponents ?? "both";
+      const chip: CSSProperties = { background: fill, borderRadius: 7, padding: "7px 9px", fontSize: 15, whiteSpace: "nowrap" };
+      return (
+        <div style={{ width: w, height: h, display: "flex", alignItems: "center", gap: 6, color: label }}>
+          <span style={{ fontSize: 17, flex: 1 }}>{part.label}</span>
+          {components !== "time" ? <span style={chip}>{date.toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" })}</span> : null}
+          {components !== "date" ? <span style={chip}>{date.toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" })}</span> : null}
+        </div>
+      );
+    }
+    case "colorPicker":
+      return (
+        <div style={{ width: w, height: h, display: "flex", alignItems: "center", justifyContent: "space-between", color: label, fontSize: 17 }}>
+          <span>{part.label}</span>
+          <span style={{ width: 30, height: 30, padding: 3, borderRadius: "50%", background: "conic-gradient(red, #ff0, #0f0, cyan, blue, magenta, red)", boxSizing: "border-box" }}>
+            <span style={{ display: "block", width: "100%", height: "100%", borderRadius: "50%", background: part.color ?? "#007AFF", border: "2px solid white", boxSizing: "border-box" }} />
+          </span>
+        </div>
+      );
     case "stepper":
       return (
         <div style={{ width: w, height: h, display: "flex", alignItems: "center", justifyContent: "space-between" }}>

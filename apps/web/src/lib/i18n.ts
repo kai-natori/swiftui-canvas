@@ -45,6 +45,14 @@ const STRINGS = {
   "inspector.checked": { en: "On", ja: "オン", zh: "开" },
   "inspector.selected": { en: "Selected", ja: "選択中", zh: "已选" },
   "inspector.value": { en: "Value", ja: "値", zh: "值" },
+  "inspector.displayedComponents": { en: "Displayed components", ja: "表示する要素", zh: "显示内容" },
+  "inspector.date": { en: "Date", ja: "日付", zh: "日期" },
+  "inspector.time": { en: "Time", ja: "時刻", zh: "时间" },
+  "inspector.both": { en: "Date and time", ja: "日付と時刻", zh: "日期和时间" },
+  "inspector.color": { en: "Selected color", ja: "選択したカラー", zh: "所选颜色" },
+  "catalog.desc.gauge": { en: "A measured value in a linear capsule or circular gauge.", ja: "測定値をカプセル型や円形で表示。", zh: "以胶囊条或圆形仪表显示测量值。" },
+  "catalog.desc.datePicker": { en: "A compact date and time selection row.", ja: "日付と時刻を選択するコンパクトな行。", zh: "紧凑的日期和时间选择行。" },
+  "catalog.desc.colorPicker": { en: "A label and a selected color well.", ja: "ラベルと選択した色のカラーウェル。", zh: "标签和所选颜色的色井。" },
   "inspector.note": { en: "Behaviour note", ja: "振る舞いメモ", zh: "行为备注" },
   "inspector.link": { en: "Tap navigation", ja: "タップ遷移", zh: "点击跳转" },
   "inspector.linkTarget": { en: "Target", ja: "遷移先", zh: "目标" },
@@ -308,6 +316,7 @@ export function t(lang: Lang, key: StringKey): string {
 
 export const KIND_NAMES: Record<Lang, Record<Kind, string>> = {
   en: {
+    gauge: "Gauge", datePicker: "Date picker", colorPicker: "Color picker",
     navBar: "Navigation bar", tabBar: "Tab bar", searchField: "Search field",
     button: "Button", iconButton: "Icon button", menu: "Menu", link: "Link",
     textField: "Text field", secureField: "Secure field", toggle: "Toggle",
@@ -317,6 +326,7 @@ export const KIND_NAMES: Record<Lang, Record<Kind, string>> = {
     box: "Container", contentUnavailable: "Empty state",
   },
   ja: {
+    gauge: "ゲージ", datePicker: "日付ピッカー", colorPicker: "カラーピッカー",
     navBar: "ナビゲーションバー", tabBar: "タブバー", searchField: "検索フィールド",
     button: "ボタン", iconButton: "アイコンボタン", menu: "メニュー", link: "リンク",
     textField: "テキストフィールド", secureField: "パスワード入力", toggle: "トグル",
@@ -326,6 +336,7 @@ export const KIND_NAMES: Record<Lang, Record<Kind, string>> = {
     box: "コンテナ", contentUnavailable: "空状態",
   },
   zh: {
+    gauge: "仪表", datePicker: "日期选择器", colorPicker: "颜色选择器",
     navBar: "导航栏", tabBar: "标签栏", searchField: "搜索框",
     button: "按钮", iconButton: "图标按钮", menu: "菜单", link: "链接",
     textField: "文本框", secureField: "密码框", toggle: "开关",
@@ -338,6 +349,7 @@ export const KIND_NAMES: Record<Lang, Record<Kind, string>> = {
 
 export const VARIANT_NAMES: Record<Lang, Partial<Record<Variant, string>>> = {
   en: {
+    accessoryCircular: "Accessory circular", compact: "Compact",
     plain: "Plain", bordered: "Bordered", borderedProminent: "Bordered prominent",
     glass: "Glass", glassProminent: "Glass prominent", roundedBorder: "Rounded border",
     insetGrouped: "Inset grouped", plainList: "Plain list", large: "Large title",
@@ -347,6 +359,7 @@ export const VARIANT_NAMES: Record<Lang, Partial<Record<Variant, string>>> = {
     callout: "Callout", footnote: "Footnote", caption: "Caption",
   },
   ja: {
+    accessoryCircular: "アクセサリ円形", compact: "コンパクト",
     plain: "プレーン", bordered: "枠線", borderedProminent: "枠線（強調）",
     glass: "ガラス", glassProminent: "ガラス（強調）", roundedBorder: "角丸の枠",
     insetGrouped: "インセットグループ", plainList: "プレーンリスト", large: "大きなタイトル",
@@ -356,6 +369,7 @@ export const VARIANT_NAMES: Record<Lang, Partial<Record<Variant, string>>> = {
     callout: "コールアウト", footnote: "脚注", caption: "キャプション",
   },
   zh: {
+    accessoryCircular: "配件圆形", compact: "紧凑",
     plain: "朴素", bordered: "边框", borderedProminent: "边框（强调）",
     glass: "玻璃", glassProminent: "玻璃（强调）", roundedBorder: "圆角边框",
     insetGrouped: "内嵌分组", plainList: "普通列表", large: "大标题",

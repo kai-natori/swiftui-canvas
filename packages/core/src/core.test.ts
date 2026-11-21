@@ -57,7 +57,7 @@ describe("model factories", () => {
 
 describe("strict validation", () => {
   it("rejects an unknown part kind", () => {
-    expect(isProject(broken((d) => ((d.parts as Record<string, unknown>[])[0]!.kind = "gauge")))).toBe(false);
+    expect(isProject(broken((d) => ((d.parts as Record<string, unknown>[])[0]!.kind = "unknownControl")))).toBe(false);
   });
 
   it("rejects a dangling link target", () => {

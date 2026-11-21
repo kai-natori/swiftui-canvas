@@ -82,6 +82,7 @@
       wrangler auth in the environment and a GitHub repo
 
 ## 9. Components catalog (added 2026-11-21)
+- [x] 9.2 Promote Gauge, DatePicker and ColorPicker to editable parts with native-style previews, localized prompts, validation and sharing.
 - [x] 9.1 /components page: all 24 part kinds rendered live with the
       SwiftPart renderer, labelled by the SwiftUI view each generates,
       grouped by Apple Developer Documentation (SwiftUI) topics /

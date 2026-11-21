@@ -57,6 +57,10 @@ export const validPart = (p: unknown): p is Part =>
   (p.checked === undefined || typeof p.checked === "boolean") &&
   (p.selected === undefined || finite(p.selected)) &&
   (p.value === undefined || finite(p.value)) &&
+  (p.kind !== "gauge" || p.value === undefined || (finite(p.value) && p.value >= 0 && p.value <= 1)) &&
+  (p.displayedComponents === undefined || ["date", "time", "both"].includes(p.displayedComponents as string)) &&
+  (p.date === undefined || (typeof p.date === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(p.date) && Number.isFinite(Date.parse(p.date)))) &&
+  (p.color === undefined || (typeof p.color === "string" && /^#[0-9a-fA-F]{6}$/.test(p.color))) &&
   (p.w === undefined || (finite(p.w) && p.w > 0)) &&
   (p.h === undefined || (finite(p.h) && p.h > 0)) &&
   (p.link === undefined || validLink(p.link));

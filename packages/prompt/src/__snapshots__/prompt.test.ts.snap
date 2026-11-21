@@ -3,7 +3,7 @@
 exports[`buildPrompt > golden output (en) 1`] = `
 "# Fitness Log
 
-Implement the app "Fitness Log" in SwiftUI from the screen designs below. It has 2 screens and 5 parts in total. Build every screen as its own View and wire up the navigation exactly as described.
+Implement the app "Fitness Log" in SwiftUI from the screen designs below. It has 2 screens and 8 parts in total. Build every screen as its own View and wire up the navigation exactly as described.
 
 ## Theme
 - Accent: Color(red: 0.204, green: 0.780, blue: 0.349); apply it with .tint on the root.
@@ -19,6 +19,9 @@ Implement the app "Fitness Log" in SwiftUI from the screen designs below. It has
 - Button "Continue", style: glassProminent
   Behaviour: Haptic feedback on tap.
 - List (no text), style: insetGrouped, : "Morning run" (figure.run), "Swim" (figure.pool.swim)
+- Gauge "Battery level", style: linear, value: 0.65 (0–1), .gaugeStyle(.linearCapacity)
+- DatePicker "Starts", style: compact, Date and time: 2026-11-21T09:41, displayedComponents: [.date, .hourAndMinute], .datePickerStyle(.compact)
+- ColorPicker "Color", style: plain, Selected color: #007AFF
 - Tab bar (TabView) (no text), style: plain, : "Home" (house) → Screen 1, "Stats" (chart.bar) → Stats, initially selected: #1
 
 ### Screen: Stats
@@ -43,7 +46,7 @@ Build it in SwiftUI with a deployment target of iOS 26.0, Swift 6.2 on the lates
 exports[`buildPrompt > golden output (ja) 1`] = `
 "# Fitness Log
 
-アプリ「Fitness Log」を、以下の画面設計どおりに SwiftUI で実装してください。画面は 2 枚、部品は合計 5 個です。各画面を個別の View として作り、遷移は説明どおりに配線してください。
+アプリ「Fitness Log」を、以下の画面設計どおりに SwiftUI で実装してください。画面は 2 枚、部品は合計 8 個です。各画面を個別の View として作り、遷移は説明どおりに配線してください。
 
 ## テーマ
 - 強調色: Color(red: 0.204, green: 0.780, blue: 0.349)。ルートに .tint で適用する。
@@ -59,6 +62,9 @@ exports[`buildPrompt > golden output (ja) 1`] = `
 - ボタン "Continue", style: glassProminent
   振る舞い: Haptic feedback on tap.
 - List （文字なし）, style: insetGrouped, : "Morning run" (figure.run), "Swim" (figure.pool.swim)
+- Gauge ゲージ "Battery level", style: linear, value: 0.65 (0–1), .gaugeStyle(.linearCapacity)
+- DatePicker 日付ピッカー "Starts", style: compact, 日付と時刻: 2026-11-21T09:41, displayedComponents: [.date, .hourAndMinute], .datePickerStyle(.compact)
+- ColorPicker カラーピッカー "Color", style: plain, 選択したカラー: #007AFF
 - タブバー（TabView） （文字なし）, style: plain, : "Home" (house) → Screen 1, "Stats" (chart.bar) → Stats, 初期選択: 1 番目
 
 ### 画面: Stats
@@ -83,7 +89,7 @@ SwiftUIで実装すること。deployment target は iOS 26.0、Swift 6.2 / 最�
 exports[`buildPrompt > golden output (zh) 1`] = `
 "# Fitness Log
 
-请按照下面的屏幕设计，用 SwiftUI 实现应用“Fitness Log”。共 2 个屏幕、5 个组件。每个屏幕做成独立的 View，跳转严格按说明连接。
+请按照下面的屏幕设计，用 SwiftUI 实现应用“Fitness Log”。共 2 个屏幕、8 个组件。每个屏幕做成独立的 View，跳转严格按说明连接。
 
 ## 主题
 - 强调色：Color(red: 0.204, green: 0.780, blue: 0.349)，在根视图用 .tint 应用。
@@ -99,6 +105,9 @@ exports[`buildPrompt > golden output (zh) 1`] = `
 - 按钮 “Continue”, style: glassProminent
   行为: Haptic feedback on tap.
 - List 列表 （无文字）, style: insetGrouped, ：“Morning run” (figure.run), “Swim” (figure.pool.swim)
+- Gauge 仪表 “Battery level”, style: linear, value: 0.65 (0–1), .gaugeStyle(.linearCapacity)
+- DatePicker 日期选择器 “Starts”, style: compact, 日期和时间: 2026-11-21T09:41, displayedComponents: [.date, .hourAndMinute], .datePickerStyle(.compact)
+- ColorPicker 颜色选择器 “Color”, style: plain, 所选颜色: #007AFF
 - 标签栏（TabView） （无文字）, style: plain, ：“Home” (house) → Screen 1, “Stats” (chart.bar) → Stats, ，初始选中第 1 项
 
 ### 屏幕: Stats
