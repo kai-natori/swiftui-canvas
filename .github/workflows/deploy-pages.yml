@@ -1,0 +1,62 @@
+name: Deploy to GitHub Pages
+
+# Owner-approved exception (2026-11-21): GitHub Actions are used in this
+# repository only to publish the static Pages build. The Pages artifact is
+# produced by the same `pnpm build:pages` command the owner runs locally
+# (apps/web/build-pages.mjs); the Cloudflare Workers deployment is separate
+# and unaffected.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  DO_NOT_TRACK: "1"
+  TURBO_TELEMETRY_DISABLED: "1"
+  NEXT_TELEMETRY_DISABLED: "1"
+  ASTRO_TELEMETRY_DISABLED: "1"
+  WRANGLER_SEND_METRICS: "false"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build for GitHub Pages (base /swiftui-canvas/)
+        run: pnpm build:pages
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist/client
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
