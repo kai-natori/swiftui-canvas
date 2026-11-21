@@ -44,7 +44,9 @@ const validDateTime = (v: unknown): boolean => {
   const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(v);
   if (!m) return false;
   const [y, mo, d, h, mi] = m.slice(1).map(Number) as [number, number, number, number, number];
-  const t = new Date(Date.UTC(y, mo - 1, d, h, mi));
+  const t = new Date(0);
+  t.setUTCFullYear(y, mo - 1, d);
+  t.setUTCHours(h, mi, 0, 0);
   return (
     t.getUTCFullYear() === y &&
     t.getUTCMonth() === mo - 1 &&

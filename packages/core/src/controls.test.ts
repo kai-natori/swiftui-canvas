@@ -22,6 +22,12 @@ describe("promoted controls", () => {
     }
   });
 
+  it("accepts real dates in early years", () => {
+    const doc = newDoc("en");
+    doc.parts = [{ ...defaultPart("en", doc.screens[0]!.id, "datePicker", 0, 0), date: "0042-02-28T09:41" }];
+    expect(isProject(doc)).toBe(true);
+  });
+
   it("allows absent optional values and empty labels", () => {
     const doc = newDoc("en");
     doc.parts = (["gauge", "datePicker", "colorPicker"] as const).map((kind) => ({
