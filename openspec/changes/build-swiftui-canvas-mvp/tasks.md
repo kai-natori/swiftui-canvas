@@ -80,3 +80,12 @@
       dist/client) + worker.ts SPA-shell fallback are in place and
       `wrangler deploy --dry-run` passes; the deploy itself waits for
       wrangler auth in the environment and a GitHub repo
+
+## 9. Components catalog (added 2026-11-21)
+- [x] 9.1 /components page: all 24 part kinds rendered live with the
+      SwiftPart renderer, labelled by the SwiftUI view each generates,
+      grouped by Apple Developer Documentation (SwiftUI) topics /
+      HIG component groups; category filter + search; coverage section
+      listing SwiftUI views not yet parts (Gauge, DatePicker, Chart,
+      Map, WebView, ...); "Add to editor" hand-off adds the chosen part
+      to the editor's first screen; en/ja/zh throughout

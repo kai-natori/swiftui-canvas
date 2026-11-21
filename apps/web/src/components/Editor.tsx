@@ -21,6 +21,7 @@ import {
 } from "@swiftui-canvas/core";
 import { GlassSurface } from "@swiftui-canvas/glass";
 
+import { takePendingPart } from "~/lib/catalog";
 import { duplicateScreenDoc, snap, tidyScreen } from "~/lib/editor-logic";
 import { LANG_NAMES, t } from "~/lib/i18n";
 import { SfIcon } from "~/lib/symbols";
@@ -208,6 +209,21 @@ export function Editor() {
       : selection?.type === "screen"
         ? selection.id
         : doc?.screens[0]?.id;
+
+  /* ---- "Add to editor" hand-off from the Components catalog --------- */
+  const pendingHandled = useRef(false);
+  useEffect(() => {
+    if (!doc || pendingHandled.current) return;
+    pendingHandled.current = true;
+    let kind: Kind | null = null;
+    try {
+      kind = takePendingPart(window.localStorage);
+    } catch {
+      kind = null;
+    }
+    const firstScreen = doc.screens[0];
+    if (kind && firstScreen) addPartToScreen(kind, firstScreen.id);
+  }, [doc, addPartToScreen]);
 
   const duplicateScreen = useCallback(
     (id: string) => {
@@ -422,6 +438,9 @@ export function Editor() {
           <button type="button" className="toolbar-button" onClick={share}>
             {linkCopied ? t(lang, "toolbar.linkCopied") : t(lang, "toolbar.share")}
           </button>
+          <a className="toolbar-button" href="/components">
+            {t(lang, "toolbar.components")}
+          </a>
           <a className="toolbar-button" href="/glass-lab">
             {t(lang, "toolbar.lab")}
           </a>

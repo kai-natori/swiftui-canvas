@@ -88,6 +88,9 @@ export function GlassLab() {
           <a className="lab-back" href="/">
             ← Editor
           </a>
+          <a className="lab-back" href="/components">
+            Components
+          </a>
           <div className="lab-accents" aria-label="Accent colour">
             {ACCENT_PRESETS.slice(0, 6).map((p) => (
               <button
