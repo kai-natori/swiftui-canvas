@@ -33,7 +33,7 @@ describe("promoted controls", () => {
   it("rejects invalid values and tolerantly drops malformed controls", () => {
     for (const [kind, field, value] of [
       ["gauge", "value", -0.1], ["gauge", "value", 1.1], ["gauge", "value", Number.NaN],
-      ["datePicker", "displayedComponents", "week"], ["datePicker", "date", "invalid"],
+      ["datePicker", "displayedComponents", "week"], ["datePicker", "date", "invalid"], ["datePicker", "date", "2026-02-31T09:41"], ["datePicker", "date", "2026-11-21T24:00"],
       ["colorPicker", "color", "red"],
     ] as const) {
       const doc = newDoc("en");

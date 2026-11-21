@@ -39,6 +39,21 @@ const validOption = (o: unknown): boolean =>
 
 const validLink = (l: unknown): boolean => isRecord(l) && typeof l.target === "string" && isTransition(l.transition);
 
+const validDateTime = (v: unknown): boolean => {
+  if (typeof v !== "string") return false;
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(v);
+  if (!m) return false;
+  const [y, mo, d, h, mi] = m.slice(1).map(Number) as [number, number, number, number, number];
+  const t = new Date(Date.UTC(y, mo - 1, d, h, mi));
+  return (
+    t.getUTCFullYear() === y &&
+    t.getUTCMonth() === mo - 1 &&
+    t.getUTCDate() === d &&
+    t.getUTCHours() === h &&
+    t.getUTCMinutes() === mi
+  );
+};
+
 export const validPart = (p: unknown): p is Part =>
   isRecord(p) &&
   typeof p.id === "string" &&
@@ -59,7 +74,7 @@ export const validPart = (p: unknown): p is Part =>
   (p.value === undefined || finite(p.value)) &&
   (p.kind !== "gauge" || p.value === undefined || (finite(p.value) && p.value >= 0 && p.value <= 1)) &&
   (p.displayedComponents === undefined || ["date", "time", "both"].includes(p.displayedComponents as string)) &&
-  (p.date === undefined || (typeof p.date === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(p.date) && Number.isFinite(Date.parse(p.date)))) &&
+  (p.date === undefined || validDateTime(p.date)) &&
   (p.color === undefined || (typeof p.color === "string" && /^#[0-9a-fA-F]{6}$/.test(p.color))) &&
   (p.w === undefined || (finite(p.w) && p.w > 0)) &&
   (p.h === undefined || (finite(p.h) && p.h > 0)) &&
