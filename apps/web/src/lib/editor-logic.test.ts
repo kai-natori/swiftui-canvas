@@ -2,9 +2,60 @@ import { describe, expect, it } from "vitest";
 
 import { defaultPart, newDoc } from "@swiftui-canvas/core";
 
-import { duplicateScreenDoc, navigationArrows, snap, snapPosition, tidyScreen } from "./editor-logic";
+import { autoPlacePart, duplicateScreenDoc, navigationArrows, snap, snapPosition, tidyScreen } from "./editor-logic";
 
 describe("editor logic", () => {
+  it("auto-places below starter content, not below the tab bar", () => {
+    const doc = newDoc("en");
+    const sid = doc.screens[0]!.id;
+    const part = defaultPart("en", sid, "slider", 0, 0);
+    const position = autoPlacePart(doc, sid, part);
+    const tab = doc.parts.find((p) => p.kind === "tabBar")!;
+    expect(position).toEqual({ x: 16, y: 328 });
+    expect(position.y + part.h!).toBeLessThanOrEqual(tab.y - 16);
+  });
+
+  it("uses an earlier free gap when appending would overflow", () => {
+    const doc = newDoc("en");
+    const sid = doc.screens[0]!.id;
+    doc.parts = doc.parts.filter((p) => p.kind === "navBar" || p.kind === "tabBar");
+    doc.parts.push({ ...defaultPart("en", sid, "box", 16, 400), h: 320 });
+    const position = autoPlacePart(doc, sid, defaultPart("en", sid, "button", 0, 0));
+    const nav = doc.parts.find((p) => p.kind === "navBar")!;
+    expect(position.y).toBeGreaterThanOrEqual(nav.y + nav.h! + 16);
+    expect(position.y + 50 + 16).toBeLessThanOrEqual(400);
+  });
+
+  it("keeps an added part visible on a full screen even when overlap is unavoidable", () => {
+    const doc = newDoc("en");
+    const sid = doc.screens[0]!.id;
+    doc.parts = doc.parts.filter((p) => p.kind === "navBar" || p.kind === "tabBar");
+    const nav = doc.parts.find((p) => p.kind === "navBar")!;
+    const tab = doc.parts.find((p) => p.kind === "tabBar")!;
+    doc.parts.push({ ...defaultPart("en", sid, "box", 16, nav.y + nav.h! + 16), h: 550 });
+    const part = defaultPart("en", sid, "button", 0, 0);
+    const position = autoPlacePart(doc, sid, part);
+    expect(position.y).toBeGreaterThanOrEqual(nav.y + nav.h! + 16);
+    expect(position.y + part.h!).toBeLessThanOrEqual(tab.y - 16);
+  });
+
+  it("honors chrome on empty screens and ignores other screens and overlay sheets", () => {
+    const doc = newDoc("en");
+    const sid = doc.screens[0]!.id;
+    const part = defaultPart("en", sid, "slider", 0, 0);
+    doc.parts = [defaultPart("en", "other-screen", "box", 16, 700), defaultPart("en", sid, "sheet", 0, 592)];
+    expect(autoPlacePart(doc, sid, part)).toEqual({ x: 16, y: 80 });
+    doc.screens[0]!.chrome = false;
+    expect(autoPlacePart(doc, sid, part)).toEqual({ x: 16, y: 16 });
+  });
+
+  it("uses inferred part sizes when stored dimensions are absent", () => {
+    const doc = newDoc("en");
+    const sid = doc.screens[0]!.id;
+    doc.parts = doc.parts.map((p) => ({ ...p, h: undefined, w: undefined }));
+    expect(autoPlacePart(doc, sid, defaultPart("en", sid, "slider", 0, 0))).toEqual({ x: 16, y: 328 });
+  });
+
   it("snaps to the 8pt grid", () => {
     expect(snap(13)).toBe(16);
     expect(snap(11)).toBe(8);

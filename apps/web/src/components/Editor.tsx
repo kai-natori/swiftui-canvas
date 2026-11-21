@@ -10,7 +10,6 @@ import {
   newDoc,
   newScreen,
   parseProjectFile,
-  partsOf,
   projectFileName,
   saveDoc,
   shareLink,
@@ -22,7 +21,7 @@ import {
 import { GlassSurface } from "@swiftui-canvas/glass";
 
 import { takePendingPart } from "~/lib/catalog";
-import { duplicateScreenDoc, snap, tidyScreen } from "~/lib/editor-logic";
+import { autoPlacePart, duplicateScreenDoc, snap, tidyScreen } from "~/lib/editor-logic";
 import { LANG_NAMES, t } from "~/lib/i18n";
 import { SfIcon } from "~/lib/symbols";
 import { Canvas, type Selection, type View } from "./Canvas";
@@ -182,9 +181,10 @@ export function Editor() {
   const addPartToScreen = useCallback(
     (kind: Kind, screenId: string, x?: number, y?: number) => {
       if (!doc) return;
-      const existing = partsOf(doc, screenId);
-      const fallbackY = existing.length ? Math.max(...existing.map((p) => p.y + (p.h ?? 40))) + 16 : 180;
-      const part = defaultPart(doc.lang, screenId, kind, snap(x ?? 16), snap(y ?? fallbackY));
+      const part = defaultPart(doc.lang, screenId, kind, 0, 0);
+      const placement = autoPlacePart(doc, screenId, part);
+      part.x = x === undefined ? placement.x : snap(x);
+      part.y = y === undefined ? placement.y : snap(y);
       if (kind === "navBar") {
         part.x = 0;
         part.y = 59;
