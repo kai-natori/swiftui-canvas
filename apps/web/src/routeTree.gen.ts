@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CompareRouteImport } from './routes/compare'
 import { Route as ComponentsRouteImport } from './routes/components'
 import { Route as GlassLabRouteImport } from './routes/glass-lab'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompareRoute = CompareRouteImport.update({
+  id: '/compare',
+  path: '/compare',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComponentsRoute = ComponentsRouteImport.update({
@@ -31,30 +37,34 @@ const GlassLabRoute = GlassLabRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/compare': typeof CompareRoute
   '/components': typeof ComponentsRoute
   '/glass-lab': typeof GlassLabRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/compare': typeof CompareRoute
   '/components': typeof ComponentsRoute
   '/glass-lab': typeof GlassLabRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/compare': typeof CompareRoute
   '/components': typeof ComponentsRoute
   '/glass-lab': typeof GlassLabRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/components' | '/glass-lab'
+  fullPaths: '/' | '/compare' | '/components' | '/glass-lab'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/components' | '/glass-lab'
-  id: '__root__' | '/' | '/components' | '/glass-lab'
+  to: '/' | '/compare' | '/components' | '/glass-lab'
+  id: '__root__' | '/' | '/compare' | '/components' | '/glass-lab'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CompareRoute: typeof CompareRoute
   ComponentsRoute: typeof ComponentsRoute
   GlassLabRoute: typeof GlassLabRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare': {
+      id: '/compare'
+      path: '/compare'
+      fullPath: '/compare'
+      preLoaderRoute: typeof CompareRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/components': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CompareRoute: CompareRoute,
   ComponentsRoute: ComponentsRoute,
   GlassLabRoute: GlassLabRoute,
 }

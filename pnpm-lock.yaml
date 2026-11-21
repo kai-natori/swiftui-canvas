@@ -181,6 +181,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@ozcanyldzhn/liquid-glass-js':
+        specifier: ^1.0.2
+        version: 1.0.2(react@19.3.1)
       '@swiftui-canvas/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -196,6 +199,9 @@ importers:
       '@tanstack/react-start':
         specifier: 1.169.4
         version: 1.169.4(esbuild@0.28.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(rolldown@1.2.19)(supports-color@10.2.2)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0))
+      '@zakisheriff/liquid-glass':
+        specifier: ^4.0.3
+        version: 4.0.3(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react:
         specifier: 19.3.1
         version: 19.3.1
@@ -831,6 +837,17 @@ packages:
   '@oxc-project/types@0.156.0':
     resolution: {integrity: sha512-1Duyg48TdJNdyhEB8Xn1L36bT9Pv6GUtlKjHxOys8xkaF/rQq3XJE+bAurSK/AgIz5mGFsb77cn9Pb20+WCScw==}
 
+  '@ozcanyldzhn/liquid-glass-js@1.0.2':
+    resolution: {integrity: sha512-kLiWdAyH/HJQo3UzZSYCoPTGWzaPNeMO9uNZHJwqsQvikuh6Q7BJpjNwgEUE9ssiC9xSK633VKLXxjYaKTVhNg==}
+    peerDependencies:
+      react: ^17.0.0 || ^18.0.0 || ^19.0.0
+      vue: ^3.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      vue:
+        optional: true
+
   '@poppinss/colors@4.1.6':
     resolution: {integrity: sha512-H9xkIdFswbS8n1d6vmRd8+c10t2Qe+rZITbbDHHkQixH5+2x1FDGmi/0K+WgWiqQFKPSlIYB7jlH6Kpfn6Fleg==}
 
@@ -1178,6 +1195,12 @@ packages:
 
   '@vitest/spy@5.0.5':
     resolution: {integrity: sha512-lwJRExuH417257Q5wv9QYugN9IMJkoxcrKrYxGPQkBzl7wlNpTUxD/5yNX4ESKVUIShKPgkGchYPFMWOOk0wzw==}
+
+  '@zakisheriff/liquid-glass@4.0.3':
+    resolution: {integrity: sha512-CeA7Brcm6+4xZdKxmozaTjGZlutIrZAUCojwVG0esdxArvC76/WxguGdZr6iOwye2oSRwnvcQtLvYPtYVJ3P3w==}
+    peerDependencies:
+      react: '>=17'
+      react-dom: '>=17'
 
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
@@ -1648,6 +1671,9 @@ packages:
   supports-color@10.2.2:
     resolution: {integrity: sha512-SS+jx45GF1QjgEXQx4NJZV9ImqmO2NPz5FNsIHrsDjh2YsHnawpan7SNQ1o8NuhrbHZy9AZhIoCUiCeaW/C80g==}
     engines: {node: '>=18'}
+
+  three@0.170.0:
+    resolution: {integrity: sha512-FQK+LEpYc0fBD+J8g6oSEyyNzjp+Q7Ks1C568WWaoMRLW+TkNNWmenWeGgJjV105Gd+p/2ql1ZcjYvNiPZBhuQ==}
 
   tinybench@6.2.4:
     resolution: {integrity: sha512-SQ52jEncXxbMCzJuY2A/jGIbbAu6NYsBWW7grz2pNE+EnzQdoGaoBfpk4qC/opE7qiUcGmGgaGIz5EoHdS1O9w==}
@@ -2328,6 +2354,12 @@ snapshots:
 
   '@oxc-project/types@0.156.0': {}
 
+  '@ozcanyldzhn/liquid-glass-js@1.0.2(react@19.3.1)':
+    dependencies:
+      three: 0.170.0
+    optionalDependencies:
+      react: 19.3.1
+
   '@poppinss/colors@4.1.6':
     dependencies:
       kleur: 4.1.5
@@ -2681,6 +2713,11 @@ snapshots:
       vite: 8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)
 
   '@vitest/spy@5.0.5': {}
+
+  '@zakisheriff/liquid-glass@4.0.3(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+    dependencies:
+      react: 19.3.1
+      react-dom: 19.3.1(react@19.3.1)
 
   abort-controller@3.0.0:
     dependencies:
@@ -3115,6 +3152,8 @@ snapshots:
   std-env@4.3.0: {}
 
   supports-color@10.2.2: {}
+
+  three@0.170.0: {}
 
   tinybench@6.2.4: {}
 

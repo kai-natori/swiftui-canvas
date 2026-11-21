@@ -12,11 +12,13 @@
     "dev:worker": "wrangler dev"
   },
   "dependencies": {
+    "@ozcanyldzhn/liquid-glass-js": "^1.0.2",
     "@swiftui-canvas/core": "workspace:*",
     "@swiftui-canvas/glass": "workspace:*",
     "@swiftui-canvas/prompt": "workspace:*",
     "@tanstack/react-router": "1.170.46",
     "@tanstack/react-start": "1.169.4",
+    "@zakisheriff/liquid-glass": "^4.0.3",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },

@@ -444,6 +444,9 @@ export function Editor() {
           <a className="toolbar-button" href="/glass-lab">
             {t(lang, "toolbar.lab")}
           </a>
+          <a className="toolbar-button" href="/compare">
+            {t(lang, "toolbar.compare")}
+          </a>
           <button type="button" className="toolbar-button" onClick={() => setShowPrompt(true)}>
             {t(lang, "toolbar.prompt")}
           </button>

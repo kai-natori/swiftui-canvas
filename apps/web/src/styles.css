@@ -1496,3 +1496,355 @@ body {
     font-size: 34px;
   }
 }
+
+/* ---- Glass comparison (/compare) --------------------------------------
+ * Three identical scenes over the lab's hero gradient, one per glass
+ * implementation. The stage is a full-bleed "photo screen": heading and
+ * labels sit directly on the gradient in white, as in the lab hero.
+ */
+
+.compare-page {
+  min-height: 100vh;
+  color: var(--sc-label);
+}
+
+.compare-page[data-scheme="dark"] {
+  background: linear-gradient(165deg, #23262e 0%, #14161a 55%, #0c0d10 100%);
+}
+
+.compare-wrap {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 40px 24px 72px;
+}
+
+.compare-hint {
+  margin: 14px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--sc-accent);
+  font-weight: 500;
+}
+
+.compare-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.compare-fact {
+  background: rgba(255, 255, 255, 0.55);
+  border: 0.5px solid rgba(255, 255, 255, 0.75);
+  border-radius: 16px;
+  padding: 14px 16px 15px;
+  backdrop-filter: blur(18px) saturate(170%);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  box-shadow: 0 10px 28px rgba(30, 40, 70, 0.12);
+}
+
+.compare-page[data-scheme="dark"] .compare-fact {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.compare-fact h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: -0.01em;
+}
+
+.compare-fact p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--sc-secondary-label);
+}
+
+.compare-page[data-scheme="dark"] .compare-fact p {
+  color: rgba(235, 235, 245, 0.72);
+}
+
+.compare-scenes {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-top: 38px;
+}
+
+.compare-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.compare-col-label {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: -0.01em;
+}
+
+/* the stage: same gradient stack as .hero in the lab */
+.cmp-stage {
+  position: relative;
+  width: 393px;
+  border-radius: 44px;
+  overflow: hidden;
+  box-shadow:
+    0 34px 70px rgba(18, 24, 46, 0.4),
+    0 5px 18px rgba(18, 24, 46, 0.28);
+  color: #ffffff;
+  flex: none;
+}
+
+.cmp-stage-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(340px 200px at 82% 8%, rgba(255, 214, 130, 0.95), transparent 65%),
+    radial-gradient(420px 320px at 8% 30%, rgba(255, 120, 110, 0.75), transparent 62%),
+    radial-gradient(500px 380px at 65% 90%, rgba(90, 90, 230, 0.8), transparent 65%),
+    linear-gradient(155deg, #6fb1ff 0%, #7a6ff0 48%, #c95fd0 100%);
+}
+
+.cmp-stage-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 34px 16px 122px;
+}
+
+.cmp-kicker {
+  margin: 0 0 2px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+  color: #ffffff;
+}
+
+.cmp-h2 {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  text-shadow: 0 1px 12px rgba(40, 20, 90, 0.25);
+}
+
+.cmp-tabbar-slot {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 34px;
+  z-index: 6;
+  display: flex;
+  justify-content: center;
+}
+
+.cmp-card-body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+}
+
+.cmp-card-body[data-c="true"] {
+  color: #ffffff;
+}
+
+.cmp-card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.cmp-card-text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+  opacity: 0.72;
+}
+
+.cmp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 32px;
+}
+
+.cmp-row-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: #ffffff;
+  text-shadow: 0 1px 8px rgba(40, 20, 90, 0.3);
+}
+
+.cmp-slider-label {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #ffffff;
+  text-shadow: 0 1px 8px rgba(40, 20, 90, 0.3);
+}
+
+.cmp-slider-label[data-ours="true"] {
+  color: var(--sc-label);
+  text-shadow: none;
+}
+
+.cmp-slider-hit {
+  touch-action: none;
+  cursor: pointer;
+}
+
+.cmp-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cmp-stack .sc-glass-button {
+  width: 100%;
+}
+
+/* C (liquid-glass-js) composites: plain controls over its glass surface */
+
+.cmp-c-tabs {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  padding: 0 6px;
+  box-sizing: border-box;
+}
+
+.cmp-c-tab {
+  all: unset;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.78);
+  cursor: pointer;
+  border-radius: 999px;
+  position: relative;
+  z-index: 0;
+}
+
+.cmp-c-tab[data-selected="true"] {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.cmp-c-tab[data-selected="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 5px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  z-index: -1;
+}
+
+.cmp-c-tab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+}
+
+.cmp-c-switch {
+  all: unset;
+  cursor: pointer;
+  border-radius: 999px;
+  display: inline-flex;
+}
+
+.cmp-c-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: transform 0.18s ease;
+}
+
+.cmp-c-knob[data-on="true"] {
+  transform: translateX(20px);
+}
+
+.cmp-c-segs {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  padding: 3px;
+  box-sizing: border-box;
+  gap: 2px;
+}
+
+.cmp-c-seg {
+  all: unset;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  border-radius: 999px;
+}
+
+.cmp-c-seg[data-selected="true"] {
+  background: rgba(255, 255, 255, 0.88);
+  color: #1c1c1e;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+
+.cmp-c-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.cmp-c-fill {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  height: 4px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.95);
+  max-width: calc(100% - 20px);
+}
+
+.cmp-c-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
