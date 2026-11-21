@@ -1,7 +1,7 @@
 import { defaultPart, newDoc, type Doc } from "@swiftui-canvas/core";
 import { describe, expect, it } from "vitest";
 
-import { apiBaseline, buildPrompt } from "./prompt";
+import { apiBaseline, buildPrompt, describePart } from "./prompt";
 
 function fixture(): Doc {
   const doc = newDoc("en");
@@ -24,10 +24,31 @@ function fixture(): Doc {
   button.link = { target: second.id, transition: "zoom" };
   button.note = "Haptic feedback on tap.";
   doc.parts.push(list);
+  for (const [i, kind] of (["gauge", "datePicker", "colorPicker"] as const).entries()) {
+    doc.parts.push(defaultPart("en", screen.id, kind, 16, 540 + i * 64));
+  }
   return doc;
 }
 
 describe("buildPrompt", () => {
+  it("describes promoted control variants, bounds and missing optional values", () => {
+    const doc = newDoc("en");
+    for (const lang of ["en", "ja", "zh"] as const) {
+      const gauge = defaultPart(lang, null, "gauge", 0, 0);
+      gauge.variant = "accessoryCircular";
+      for (const value of [0, 1]) {
+        expect(describePart(lang, { ...gauge, value }, doc)).toContain(`value: ${value} (0–1), .gaugeStyle(.accessoryCircular)`);
+      }
+      const picker = defaultPart(lang, null, "datePicker", 0, 0);
+      expect(describePart(lang, { ...picker, displayedComponents: "date" }, doc)).toContain("displayedComponents: [.date]");
+      expect(describePart(lang, { ...picker, displayedComponents: "time" }, doc)).toContain("displayedComponents: [.hourAndMinute]");
+      const color = defaultPart(lang, null, "colorPicker", 0, 0);
+      expect(describePart(lang, { ...color, color: "#FF9500" }, doc)).toContain("#FF9500");
+      expect(describePart(lang, { ...color, color: undefined, label: "" }, doc)).toContain("#007AFF");
+      expect(describePart(lang, { ...picker, date: undefined, displayedComponents: undefined }, doc)).toContain("2026-11-21T09:41");
+      expect(describePart(lang, { ...gauge, value: undefined }, doc)).toContain("0.65");
+    }
+  });
   it("contains the fixed API baseline with identical API wording in all languages", () => {
     for (const lang of ["en", "ja", "zh"] as const) {
       const text = apiBaseline(lang);

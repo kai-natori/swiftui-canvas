@@ -33,6 +33,9 @@ export type Kind =
   | "toggle"
   | "slider"
   | "stepper"
+  | "gauge"
+  | "datePicker"
+  | "colorPicker"
   | "segmented"
   | "picker"
   | "text"
@@ -59,6 +62,9 @@ export const KIND_ORDER: Kind[] = [
   "toggle",
   "slider",
   "stepper",
+  "gauge",
+  "datePicker",
+  "colorPicker",
   "segmented",
   "picker",
   "text",
@@ -96,6 +102,9 @@ export const PALETTE_ORDER: Kind[] = [
   "box",
   "menu",
   "stepper",
+  "gauge",
+  "datePicker",
+  "colorPicker",
   "secureField",
   "link",
   "contentUnavailable",
@@ -119,6 +128,8 @@ export type Variant =
   | "tertiary"
   | "linear"
   | "circular"
+  | "accessoryCircular"
+  | "compact"
   | "largeTitle"
   | "title"
   | "headline"
@@ -141,6 +152,9 @@ export const KIND_VARIANTS: Record<Kind, Variant[]> = {
   toggle: ["plain"],
   slider: ["plain"],
   stepper: ["plain"],
+  gauge: ["linear", "accessoryCircular"],
+  datePicker: ["compact"],
+  colorPicker: ["plain"],
   segmented: ["plain"],
   picker: ["plain"],
   text: ["body", "largeTitle", "title", "headline", "callout", "footnote", "caption"],
@@ -186,6 +200,9 @@ export interface Part {
   checked?: boolean;
   selected?: number;
   value?: number;
+  displayedComponents?: "date" | "time" | "both";
+  date?: string;
+  color?: string;
   w?: number;
   h?: number;
   /** Free-form behaviour note; travels into the prompt. */
@@ -300,6 +317,11 @@ export function partSize(kind: Kind, part?: Partial<Part>): { w: number; h: numb
       return { w: 361, h: 28 };
     case "stepper":
       return { w: 361, h: 32 };
+    case "gauge":
+      return part?.variant === "accessoryCircular" ? { w: 80, h: 80 } : { w: 361, h: 48 };
+    case "datePicker":
+    case "colorPicker":
+      return { w: 361, h: 44 };
     case "segmented":
       return { w: 361, h: 32 };
     case "picker":
@@ -351,6 +373,9 @@ const DEFAULT_LABELS: Record<Lang, Partial<Record<Kind, string>>> = {
     link: "Learn more",
     menu: "Options",
     stepper: "Quantity",
+    gauge: "Battery level",
+    datePicker: "Starts",
+    colorPicker: "Color",
     picker: "Sort by",
     contentUnavailable: "Nothing here yet",
     alert: "Delete item?",
@@ -369,6 +394,9 @@ const DEFAULT_LABELS: Record<Lang, Partial<Record<Kind, string>>> = {
     link: "詳しく見る",
     menu: "オプション",
     stepper: "数量",
+    gauge: "バッテリー残量",
+    datePicker: "開始",
+    colorPicker: "カラー",
     picker: "並び替え",
     contentUnavailable: "まだ何もありません",
     alert: "削除しますか？",
@@ -387,6 +415,9 @@ const DEFAULT_LABELS: Record<Lang, Partial<Record<Kind, string>>> = {
     link: "了解更多",
     menu: "选项",
     stepper: "数量",
+    gauge: "电池电量",
+    datePicker: "开始",
+    colorPicker: "颜色",
     picker: "排序",
     contentUnavailable: "这里还没有内容",
     alert: "要删除吗？",
@@ -443,6 +474,12 @@ export function defaultPart(lang: Lang, screenId: string | null, kind: Kind, x: 
   if (kind === "toggle") part.checked = true;
   if (kind === "slider" || kind === "progress") part.value = 40;
   if (kind === "stepper") part.value = 1;
+  if (kind === "gauge") part.value = 0.65;
+  if (kind === "datePicker") {
+    part.displayedComponents = "both";
+    part.date = "2026-11-21T09:41";
+  }
+  if (kind === "colorPicker") part.color = "#007AFF";
   if (kind === "segmented" || kind === "picker" || kind === "menu" || kind === "tabBar") part.selected = 0;
   if (kind === "card") part.supporting = lang === "ja" ? "カードの本文テキスト" : lang === "zh" ? "卡片正文" : "Supporting text for the card.";
   if (kind === "alert") part.supporting = lang === "ja" ? "この操作は取り消せません" : lang === "zh" ? "此操作无法撤销" : "This action cannot be undone.";

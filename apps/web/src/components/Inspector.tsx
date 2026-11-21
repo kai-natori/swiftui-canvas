@@ -1,6 +1,7 @@
 import {
   BACK_TARGET,
   KIND_VARIANTS,
+  partSize,
   SCREEN_BGS,
   TRANSITIONS,
   partsOf,
@@ -123,7 +124,10 @@ function PartInspector(props: InspectorProps & { part: Part }) {
         <select
           className="inspector-select"
           value={variantOf(part)}
-          onChange={(e) => patch({ variant: e.target.value as Part["variant"] })}
+          onChange={(e) => {
+            const variant = e.target.value as Part["variant"];
+            patch({ variant, ...(part.kind === "gauge" ? partSize(part.kind, { variant }) : {}) });
+          }}
         >
           {KIND_VARIANTS[part.kind].map((v) => (
             <option key={v} value={v}>{VARIANT_NAMES[lang][v] ?? v}</option>
@@ -137,12 +141,30 @@ function PartInspector(props: InspectorProps & { part: Part }) {
         </Field>
       ) : null}
 
-      {part.kind === "slider" || part.kind === "progress" || part.kind === "stepper" ? (
+      {part.kind === "datePicker" ? (
+        <>
+          <Field label={t(lang, "inspector.displayedComponents")}>
+            <select className="inspector-select" value={part.displayedComponents ?? "both"} onChange={(e) => patch({ displayedComponents: e.target.value as Part["displayedComponents"] })}>
+              {(["date", "time", "both"] as const).map((c) => <option key={c} value={c}>{t(lang, `inspector.${c}`)}</option>)}
+            </select>
+          </Field>
+          <Field label={t(lang, "inspector.both")}>
+            <input className="inspector-input" type="datetime-local" value={part.date ?? "2026-11-21T09:41"} onChange={(e) => patch({ date: e.target.value || undefined })} />
+          </Field>
+        </>
+      ) : null}
+      {part.kind === "colorPicker" ? (
+        <Field label={t(lang, "inspector.color")}>
+          <input type="color" value={part.color ?? "#007AFF"} onChange={(e) => patch({ color: e.target.value })} />
+        </Field>
+      ) : null}
+      {part.kind === "slider" || part.kind === "progress" || part.kind === "stepper" || part.kind === "gauge" ? (
         <Field label={`${t(lang, "inspector.value")} (${part.value ?? 0})`}>
           <input
             type="range"
             min={0}
-            max={part.kind === "stepper" ? 20 : 100}
+            max={part.kind === "gauge" ? 1 : part.kind === "stepper" ? 20 : 100}
+            step={part.kind === "gauge" ? 0.01 : 1}
             value={part.value ?? 0}
             onChange={(e) => patch({ value: Number(e.target.value) })}
           />

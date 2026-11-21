@@ -75,6 +75,9 @@ export const CATALOG: CatalogEntry[] = [
   { kind: "toggle", category: "controls", swift: "Toggle", descKey: "catalog.desc.toggle" },
   { kind: "slider", category: "controls", swift: "Slider", descKey: "catalog.desc.slider" },
   { kind: "stepper", category: "controls", swift: "Stepper", descKey: "catalog.desc.stepper" },
+  { kind: "gauge", category: "controls", swift: "Gauge", descKey: "catalog.desc.gauge" },
+  { kind: "datePicker", category: "controls", swift: "DatePicker", descKey: "catalog.desc.datePicker" },
+  { kind: "colorPicker", category: "controls", swift: "ColorPicker", descKey: "catalog.desc.colorPicker" },
   { kind: "segmented", category: "controls", swift: "Picker", composite: true, descKey: "catalog.desc.segmented" },
   { kind: "picker", category: "controls", swift: "Picker", descKey: "catalog.desc.picker" },
   { kind: "progress", category: "controls", swift: "ProgressView", descKey: "catalog.desc.progress" },
@@ -107,9 +110,6 @@ export interface NotYetEntry {
 }
 
 export const NOT_YET: NotYetEntry[] = [
-  { swift: "Gauge", category: "controls" },
-  { swift: "DatePicker", category: "controls" },
-  { swift: "ColorPicker", category: "controls" },
   { swift: "MultiDatePicker", category: "controls" },
   { swift: "Form", category: "layout" },
   { swift: "Table", category: "layout" },

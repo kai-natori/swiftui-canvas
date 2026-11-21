@@ -10,12 +10,13 @@ import { SfIcon } from "~/lib/symbols";
 const GROUPS: { key: "palette.bars" | "palette.controls" | "palette.input" | "palette.display" | "palette.modal"; kinds: Kind[] }[] = [
   { key: "palette.bars", kinds: ["navBar", "tabBar", "searchField"] },
   { key: "palette.controls", kinds: ["button", "iconButton", "menu", "link", "segmented", "picker", "stepper"] },
-  { key: "palette.input", kinds: ["textField", "secureField", "toggle", "slider"] },
+  { key: "palette.input", kinds: ["textField", "secureField", "toggle", "slider", "gauge", "datePicker", "colorPicker"] },
   { key: "palette.display", kinds: ["text", "image", "list", "card", "divider", "progress", "box", "contentUnavailable"] },
   { key: "palette.modal", kinds: ["alert", "sheet"] },
 ];
 
 const KIND_ICONS: Record<Kind, string> = {
+  gauge: "gauge", datePicker: "calendar", colorPicker: "pencil",
   navBar: "text.bubble", tabBar: "square.grid.2x2", searchField: "magnifyingglass",
   button: "play", iconButton: "plus", menu: "ellipsis.circle", link: "link",
   textField: "text.bubble", secureField: "lock", toggle: "slider.horizontal.3",

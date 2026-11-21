@@ -187,6 +187,9 @@ const KIND_NOUN: Record<Lang, Record<Part["kind"], string>> = {
     toggle: "Toggle",
     slider: "Slider",
     stepper: "Stepper",
+    gauge: "Gauge",
+    datePicker: "DatePicker",
+    colorPicker: "ColorPicker",
     segmented: "Segmented Picker",
     picker: "Menu Picker",
     text: "Text",
@@ -213,6 +216,9 @@ const KIND_NOUN: Record<Lang, Record<Part["kind"], string>> = {
     toggle: "Toggle",
     slider: "Slider",
     stepper: "Stepper",
+    gauge: "Gauge ゲージ",
+    datePicker: "DatePicker 日付ピッカー",
+    colorPicker: "ColorPicker カラーピッカー",
     segmented: "セグメント Picker",
     picker: "メニュー Picker",
     text: "テキスト",
@@ -239,6 +245,9 @@ const KIND_NOUN: Record<Lang, Record<Part["kind"], string>> = {
     toggle: "Toggle 开关",
     slider: "Slider 滑块",
     stepper: "Stepper 步进器",
+    gauge: "Gauge 仪表",
+    datePicker: "DatePicker 日期选择器",
+    colorPicker: "ColorPicker 颜色选择器",
     segmented: "分段 Picker",
     picker: "菜单 Picker",
     text: "文本",
@@ -281,6 +290,16 @@ export function describePart(lang: Lang, part: Part, doc: Doc): string {
     bits.push(s.value(it.value));
   }
   if (it.value !== undefined && it.kind === "stepper") bits.push(`${it.value}`);
+  if (it.kind === "gauge") bits.push(`value: ${it.value ?? 0.65} (0–1)`, it.variant === "accessoryCircular" ? ".gaugeStyle(.accessoryCircular)" : ".gaugeStyle(.linearCapacity)");
+  if (it.kind === "datePicker") {
+    const components = it.displayedComponents ?? "both";
+    const names = { en: "Date and time", ja: "日付と時刻", zh: "日期和时间" };
+    bits.push(`${names[lang]}: ${it.date ?? "2026-11-21T09:41"}`, `displayedComponents: ${components === "both" ? "[.date, .hourAndMinute]" : components === "date" ? "[.date]" : "[.hourAndMinute]"}`, ".datePickerStyle(.compact)");
+  }
+  if (it.kind === "colorPicker") {
+    const names = { en: "Selected color", ja: "選択したカラー", zh: "所选颜色" };
+    bits.push(`${names[lang]}: ${it.color ?? "#007AFF"}`);
+  }
   bits.push(optionsText(lang, it, doc, s));
   if (it.selected !== undefined && (it.kind === "segmented" || it.kind === "picker" || it.kind === "menu" || it.kind === "tabBar")) {
     bits.push(s.selected(it.selected).replace(/^[、,]\s*/, ""));

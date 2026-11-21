@@ -64,7 +64,7 @@ describe("filterCatalog", () => {
 
   it("matches SwiftUI names case-insensitively", () => {
     expect(filterCatalog("all", "toggle").map((e) => e.kind)).toEqual(["toggle"]);
-    expect(filterCatalog("all", "PICKER").map((e) => e.kind).sort()).toEqual(["picker", "segmented"]);
+    expect(filterCatalog("all", "PICKER").map((e) => e.kind).sort()).toEqual(["colorPicker", "datePicker", "picker", "segmented"]);
     expect(filterCatalog("all", "navigationstack").map((e) => e.kind)).toEqual(["navBar"]);
   });
 
@@ -75,7 +75,7 @@ describe("filterCatalog", () => {
 
   it("combines category and query", () => {
     expect(filterCatalog("text", "picker")).toHaveLength(0);
-    expect(filterCatalog("controls", "picker").length).toBe(2);
+    expect(filterCatalog("controls", "picker").length).toBe(4);
   });
 });
 
