@@ -35,6 +35,7 @@ const validOption = (o: unknown): boolean =>
   isRecord(o) &&
   typeof o.label === "string" &&
   (o.icon === undefined || o.icon === null || typeof o.icon === "string") &&
+  (o.role === undefined || o.role === "default" || o.role === "search") &&
   (o.target === undefined || o.target === null || typeof o.target === "string");
 
 const validLink = (l: unknown): boolean => isRecord(l) && typeof l.target === "string" && isTransition(l.transition);
@@ -70,6 +71,8 @@ export const validPart = (p: unknown): p is Part =>
   (p.icon === undefined || p.icon === null || typeof p.icon === "string") &&
   (p.supporting === undefined || typeof p.supporting === "string") &&
   (p.note === undefined || typeof p.note === "string") &&
+  (p.parent === undefined || typeof p.parent === "string") &&
+  (p.image === undefined || (typeof p.image === "string" && p.image.length <= 2_000_000 && /^data:image\/(?:png|jpeg|webp|gif);base64,[A-Za-z0-9+/]+=*$/.test(p.image))) &&
   (p.presents === undefined || typeof p.presents === "string") &&
   (p.checked === undefined || typeof p.checked === "boolean") &&
   (p.selected === undefined || finite(p.selected)) &&
@@ -107,6 +110,7 @@ function refsIntact(screens: Screen[], parts: Part[]): boolean {
   if (partIds.size !== parts.length) return false;
   const okTarget = (t: string) => t === BACK_TARGET || ids.has(t);
   return parts.every((p) => {
+    if (p.parent && !validParent(p, parts)) return false;
     if (p.screen !== null && !ids.has(p.screen)) return false;
     if (p.link && !okTarget(p.link.target)) return false;
     if (p.options?.some((o) => o.target != null && !okTarget(o.target))) return false;
@@ -116,6 +120,12 @@ function refsIntact(screens: Screen[], parts: Part[]): boolean {
     }
     return true;
   });
+}
+
+function validParent(part: Part, parts: Part[]): boolean {
+  if (["box", "navBar", "tabBar", "sheet", "alert"].includes(part.kind)) return false;
+  const parent = parts.find((p) => p.id === part.parent);
+  return !!parent && parent.kind === "box" && parent.screen === part.screen && !parent.parent;
 }
 
 export function isProject(v: unknown): v is Doc {
@@ -192,7 +202,12 @@ export function validateDoc(value: unknown, label = "document"): Validated {
     parts.push(p);
   }
   for (let i = 0; i < parts.length; i++) {
-    const p = parts[i]!;
+    let p = parts[i]!;
+    if (p.parent && !validParent(p, parts)) {
+      p = { ...p, parent: undefined };
+      parts[i] = p;
+      warnings.push(`${label}: invalid container reference removed (${p.id})`);
+    }
     if (!p.presents) continue;
     const q = parts.find((x) => x.id === p.presents);
     if (!q || q.screen !== p.screen || (q.kind !== "alert" && q.kind !== "sheet")) {
@@ -230,6 +245,7 @@ export function mergeDoc(incoming: Doc, current: Doc): { doc: Doc; idMap: Map<st
     link: p.link && remap(p.link.target) !== undefined ? { ...p.link, target: remap(p.link.target)! } : undefined,
     options: p.options?.map((o) => ({ ...o, target: o.target ? (remap(o.target) ?? null) : null })),
     presents: p.presents ? idOf.get(p.presents) : undefined,
+    parent: p.parent ? idOf.get(p.parent) : undefined,
   }));
   return { doc: { ...current, screens: [...current.screens, ...screens], parts: [...current.parts, ...parts] }, idMap: idOf };
 }

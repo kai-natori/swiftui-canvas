@@ -23,6 +23,20 @@ import {
 
 export const snap = (v: number): number => Math.round(v / GRID) * GRID;
 
+/** Moving a container preserves the positions of its members as a group. */
+export function movePartDoc(doc: Doc, id: string, x: number, y: number): Doc {
+  const source = doc.parts.find((p) => p.id === id);
+  if (!source) return doc;
+  return { ...doc, parts: doc.parts.map((p) =>
+    p.id === id ? { ...p, x, y } : p.parent === id ? { ...p, x: p.x + x - source.x, y: p.y + y - source.y } : p,
+  ) };
+}
+
+/** Screen chrome has one instance per screen, including palette drops. */
+export function existingChrome(doc: Doc, screenId: string, kind: Part["kind"]): Part | undefined {
+  return kind === "navBar" || kind === "tabBar" ? doc.parts.find((p) => p.screen === screenId && p.kind === kind) : undefined;
+}
+
 export function autoPlacePart(doc: Doc, screenId: string, part: Part): { x: number; y: number } {
   const screen = doc.screens.find((s) => s.id === screenId);
   const parts = partsOf(doc, screenId);
@@ -148,7 +162,7 @@ export function tidyScreen(doc: Doc, screenId: string): Doc {
   const tab = parts.find((p) => p.kind === "tabBar");
   const sheetParts = parts.filter((p) => p.kind === "sheet");
   const rest = parts
-    .filter((p) => p.kind !== "navBar" && p.kind !== "tabBar" && p.kind !== "sheet")
+    .filter((p) => p.kind !== "navBar" && p.kind !== "tabBar" && p.kind !== "sheet" && !p.parent)
     .sort((a, b) => a.y - b.y || a.x - b.x);
 
   const moved = new Map<string, { x: number; y: number }>();
@@ -183,6 +197,9 @@ export function tidyScreen(doc: Doc, screenId: string): Doc {
     ...doc,
     parts: doc.parts.map((p) => {
       const m = p.screen === screenId ? moved.get(p.id) : undefined;
+      const parentMove = p.parent ? moved.get(p.parent) : undefined;
+      const parent = p.parent ? doc.parts.find((q) => q.id === p.parent) : undefined;
+      if (parentMove && parent) return { ...p, x: p.x + parentMove.x - parent.x, y: p.y + parentMove.y - parent.y };
       return m ? { ...p, x: m.x, y: m.y } : p;
     }),
   };
@@ -215,6 +232,7 @@ export function duplicateScreenDoc(doc: Doc, screenId: string, dx = 48, dy = 48)
       }));
     }
     if (copy.presents) copy.presents = partMap.get(copy.presents) ?? undefined;
+    if (copy.parent) copy.parent = partMap.get(copy.parent) ?? undefined;
     return copy;
   });
   return { doc: { ...doc, screens: [...doc.screens, screen], parts: [...doc.parts, ...parts] }, screen };

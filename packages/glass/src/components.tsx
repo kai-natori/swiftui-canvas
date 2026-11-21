@@ -39,7 +39,7 @@ export function GlassSurface(props: GlassSurfaceProps) {
   return (
     <div
       className={className ? `sc-glass ${className}` : "sc-glass"}
-      style={{ borderRadius: radius, ...style }}
+      style={{ width, height, borderRadius: radius, ...style }}
     >
       {filter && filterId ? (
         <>

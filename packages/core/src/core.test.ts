@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   KIND_ORDER,
+  MAX_PROJECT_BYTES,
   defaultPart,
   isProject,
   loadDoc,
@@ -56,6 +57,11 @@ describe("model factories", () => {
 });
 
 describe("strict validation", () => {
+  it("bounds project file ingress by UTF-8 bytes rather than character count", () => {
+    const text = JSON.stringify({ ...newDoc("ja"), title: "あ".repeat(Math.ceil(MAX_PROJECT_BYTES / 3)) });
+    expect(text.length).toBeLessThan(MAX_PROJECT_BYTES);
+    expect(parseProjectFile(text)).toBeNull();
+  });
   it("rejects an unknown part kind", () => {
     expect(isProject(broken((d) => ((d.parts as Record<string, unknown>[])[0]!.kind = "unknownControl")))).toBe(false);
   });

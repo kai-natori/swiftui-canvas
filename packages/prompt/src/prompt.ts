@@ -4,6 +4,7 @@ import {
   partsOf,
   screenName,
   variantOf,
+  isSearchTab,
   type Doc,
   type Lang,
   type Part,
@@ -271,7 +272,7 @@ function optionsText(lang: Lang, part: Part, doc: Doc, s: Strings): string {
         o.target && (part.kind === "tabBar" || part.kind === "list")
           ? ` → ${o.target === BACK_TARGET ? "back" : screenName(doc, o.target)}`
           : "";
-      return `${q(lang, o.label || "")}${o.icon ? ` (${o.icon})` : ""}${target}`;
+      return `${q(lang, o.label || "")}${o.icon ? ` (${o.icon})` : ""}${part.kind === "tabBar" && isSearchTab(o) ? " [Tab(role: .search), .searchable]" : ""}${target}`;
     })
     .join(", ");
   return s.options(list);
@@ -283,6 +284,11 @@ export function describePart(lang: Lang, part: Part, doc: Doc): string {
   const noun = KIND_NOUN[lang][it.kind];
   const bits: string[] = [`${noun} ${label(lang, it.label)}`];
   bits.push(`style: ${it.variant}`);
+  if (it.image) bits.push(lang === "ja" ? "添付画像をアセットとして使用（画像はプロジェクトJSONに含まれる）" : lang === "zh" ? "使用项目 JSON 中的嵌入图片作为资源" : "Use the embedded image asset from the project JSON");
+  if (it.parent) {
+    const parent = doc.parts.find((p) => p.id === it.parent);
+    if (parent) bits.push(`${lang === "ja" ? "コンテナ" : lang === "zh" ? "容器" : "Container"}: ${label(lang, parent.label)} (ZStack, x: ${it.x - parent.x}, y: ${it.y - parent.y})`);
+  }
   if (it.icon && it.kind !== "tabBar") bits.push(s.withIcon(it.icon).trim());
   if (hasText(it.supporting)) bits.push(label(lang, it.supporting));
   if (it.checked !== undefined && it.kind === "toggle") bits.push(it.checked ? s.on : s.off);

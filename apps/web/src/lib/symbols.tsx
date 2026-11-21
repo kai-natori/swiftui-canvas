@@ -22,6 +22,13 @@ export interface SymbolData {
 const p = (paths: string[], extra?: Partial<SymbolData>): SymbolData => ({ paths, ...extra });
 
 export const SF_SYMBOLS: Record<string, SymbolData> = {
+  "sidebar.left": p(["M9 4v16"], { rects: [[3, 4, 18, 16, 2]] }),
+  "sidebar.right": p(["M15 4v16"], { rects: [[3, 4, 18, 16, 2]] }),
+  "rectangle.portrait": p(["M10 18h4"], { rects: [[6, 2.5, 12, 19, 3]] }),
+  "arrow.uturn.backward": p(["M9 5 4 10l5 5", "M4 10h10a5 5 0 0 1 0 10h-2"]),
+  "arrow.uturn.forward": p(["m15 5 5 5-5 5", "M20 10H10a5 5 0 0 0 0 10h2"]),
+  "square.stack": p(["M7 3h14v14M4 6h14v14"], { rects: [[1, 9, 14, 14, 2]] }),
+  "curlybraces": p(["M9 3H7v6l-3 3 3 3v6h2", "M15 3h2v6l3 3-3 3v6h-2"]),
   house: p(["M3.5 11.2 12 4l8.5 7.2", "M6 9.8V20h12V9.8"]),
   "house.fill": p(["M3.5 11.2 12 4l8.5 7.2", "M6 9.8V20h12V9.8"], { filled: true }),
   magnifyingglass: p(["m15.5 15.5 5 5"], { circles: [[10.5, 10.5, 6.5]] }),

@@ -1,4 +1,5 @@
-import { KIND_ORDER, type Kind, type Lang } from "@swiftui-canvas/core";
+import { useState } from "react";
+import { type Kind, type Lang } from "@swiftui-canvas/core";
 
 import { KIND_NAMES, t } from "~/lib/i18n";
 import { SfIcon } from "~/lib/symbols";
@@ -15,7 +16,7 @@ const GROUPS: { key: "palette.bars" | "palette.controls" | "palette.input" | "pa
   { key: "palette.modal", kinds: ["alert", "sheet"] },
 ];
 
-const KIND_ICONS: Record<Kind, string> = {
+export const KIND_ICONS: Record<Kind, string> = {
   gauge: "gauge", datePicker: "calendar", colorPicker: "pencil",
   navBar: "text.bubble", tabBar: "square.grid.2x2", searchField: "magnifyingglass",
   button: "play", iconButton: "plus", menu: "ellipsis.circle", link: "link",
@@ -28,12 +29,21 @@ const KIND_ICONS: Record<Kind, string> = {
 };
 
 export function Palette({ lang, onAdd }: { lang: Lang; onAdd: (kind: Kind) => void }) {
-  const ordered = KIND_ORDER; // keep group order stable against the model
-  void ordered;
+  const [search, setSearch] = useState("");
+  const query = search.trim().toLocaleLowerCase();
+  const groups = GROUPS.map((group) => ({ ...group, kinds: group.kinds.filter((kind) =>
+    `${KIND_NAMES[lang][kind]} ${kind}`.toLocaleLowerCase().includes(query),
+  ) })).filter((group) => group.kinds.length);
   return (
-    <div className="palette sc-font">
-      <div className="panel-title">{t(lang, "palette.title")}</div>
-      {GROUPS.map((g) => (
+    <section className="palette sc-font" aria-label={t(lang, "workspace.library")}>
+      <div className="library-heading"><span>{t(lang, "workspace.library")}</span><span>27</span></div>
+      <label className="library-search">
+        <SfIcon name="magnifyingglass" size={14} />
+        <input type="search" aria-label={t(lang, "catalog.searchPlaceholder")} placeholder={t(lang, "catalog.searchPlaceholder")}
+          value={search} onChange={(e) => setSearch(e.target.value)} />
+      </label>
+      <div className="palette-scroll">
+      {groups.map((g) => (
         <div key={g.key} className="palette-group">
           <div className="palette-group-title">{t(lang, g.key)}</div>
           {g.kinds.map((kind) => (
@@ -53,10 +63,13 @@ export function Palette({ lang, onAdd }: { lang: Lang; onAdd: (kind: Kind) => vo
                 <SfIcon name={KIND_ICONS[kind]} size={17} />
               </span>
               <span className="palette-item-name">{KIND_NAMES[lang][kind]}</span>
+              <SfIcon name="plus" size={12} />
             </button>
           ))}
         </div>
       ))}
-    </div>
+      {groups.length === 0 ? <p className="inspector-hint">{t(lang, "catalog.noResults")}</p> : null}
+      </div>
+    </section>
   );
 }

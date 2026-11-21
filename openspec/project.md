@@ -32,3 +32,11 @@ Material 3 Expressive.
   write the delta specs and tasks, then implement and archive.
 - UI review: Cloudflare preview URL first; production only after owner OK.
 - Every user-facing string goes through i18n (en / ja / zh from the start).
+
+## Publication update
+
+The owner now intends to publish the development preview on GitHub
+Pages. `prepare-github-pages` adds a local project-path build and manual
+`gh-pages` branch publication; no GitHub Actions are introduced.
+Cloudflare Workers remains an alternative. Preparing/testing a static
+build is separate from approving and executing public deployment.

@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 
 import {
   LANGS,
+  MAX_PROJECT_BYTES,
+  SHARE_PREFIX,
   SCREEN_W,
   defaultPart,
   docFromHashDetailed,
@@ -18,10 +21,9 @@ import {
   type Lang,
   type Screen,
 } from "@swiftui-canvas/core";
-import { GlassSurface } from "@swiftui-canvas/glass";
 
 import { takePendingPart } from "~/lib/catalog";
-import { autoPlacePart, duplicateScreenDoc, snap, tidyScreen } from "~/lib/editor-logic";
+import { autoPlacePart, duplicateScreenDoc, existingChrome, movePartDoc, snap, tidyScreen } from "~/lib/editor-logic";
 import { LANG_NAMES, t } from "~/lib/i18n";
 import { SfIcon } from "~/lib/symbols";
 import { Canvas, type Selection, type View } from "./Canvas";
@@ -30,6 +32,7 @@ import { Palette } from "./Palette";
 import { Preview } from "./Preview";
 import { PromptPanel } from "./PromptPanel";
 import { ThemePanel } from "./ThemePanel";
+import { Navigator } from "./Navigator";
 
 /* The editor (tasks 4.x, 5.1, 6.3, 7.x): composition, document state
  * with undo/redo history, persistence (localStorage autosave, JSON
@@ -47,11 +50,32 @@ export function Editor() {
   const [showPreview, setShowPreview] = useState(false);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [panel, setPanel] = useState<"navigator" | "inspector" | null>(null);
+  const [inspectorTab, setInspectorTab] = useState<"properties" | "appearance">("properties");
+  const [saveError, setSaveError] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [viewport, setViewport] = useState({ compact: false, narrow: false });
   const past = useRef<Doc[]>([]);
   const future = useRef<Doc[]>([]);
   const dragSnapshot = useRef<Doc | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [, setHistoryTick] = useState(0);
+  const overlayPanel = panel === "navigator" ? viewport.compact : panel === "inspector" && viewport.narrow;
+
+  useEffect(() => {
+    const updateViewport = () => setViewport({ compact: window.innerWidth <= 760, narrow: window.innerWidth <= 1100 });
+    updateViewport();
+    window.addEventListener("resize", updateViewport);
+    const closeMenu = (event: PointerEvent) => {
+      const menu = document.querySelector<HTMLDetailsElement>(".workspace-menu[open]");
+      if (menu && !menu.contains(event.target as Node)) menu.open = false;
+    };
+    window.addEventListener("pointerdown", closeMenu);
+    return () => {
+      window.removeEventListener("resize", updateViewport);
+      window.removeEventListener("pointerdown", closeMenu);
+    };
+  }, []);
 
   /* ---- initial load: share hash → localStorage → new document ------- */
   useEffect(() => {
@@ -64,13 +88,16 @@ export function Editor() {
         if (fromHash.warnings.length > 0) setWarnings(fromHash.warnings);
         return;
       }
-      const saved = loadDoc(window.localStorage);
+      let saved: ReturnType<typeof loadDoc> = null;
+      try { saved = loadDoc(window.localStorage); } catch { setSaveError(true); }
+      const language = saved?.doc.lang ?? (navigator.language.startsWith("ja") ? "ja" : navigator.language.startsWith("zh") ? "zh" : "en");
+      if (window.location.hash.startsWith(SHARE_PREFIX)) setNotice(t(language, "workspace.invalidShare"));
       if (saved) {
         setDoc(saved.doc);
         if (saved.warnings.length > 0) setWarnings(saved.warnings);
         return;
       }
-      setDoc(newDoc("en"));
+      setDoc(newDoc(language));
     })();
     return () => {
       cancelled = true;
@@ -79,8 +106,34 @@ export function Editor() {
 
   /* ---- autosave ------------------------------------------------------ */
   useEffect(() => {
-    if (doc) saveDoc(window.localStorage, doc);
+    if (!doc) return;
+    try { saveDoc(window.localStorage, doc); setSaveError(false); } catch { setSaveError(true); }
+    document.documentElement.lang = doc.lang;
   }, [doc]);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(""), 4000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
+  useEffect(() => {
+    if (!panel) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const element = overlayPanel ? document.querySelector<HTMLElement>(panel === "navigator" ? ".workspace-sidebar" : ".editor-side") : null;
+    element?.querySelector<HTMLButtonElement>("button")?.focus();
+    const close = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { e.preventDefault(); setPanel(null); }
+      if (e.key === "Tab" && element) {
+        const items = Array.from(element.querySelectorAll<HTMLElement>("button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href]")).filter((item) => item.getClientRects().length > 0);
+        const first = items[0], last = items.at(-1);
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+        if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+      }
+    };
+    window.addEventListener("keydown", close);
+    return () => { window.removeEventListener("keydown", close); if (element) previousFocus?.focus(); };
+  }, [panel, overlayPanel]);
 
   const commit = useCallback((next: Doc) => {
     setDoc((prev) => {
@@ -150,9 +203,7 @@ export function Editor() {
   }, []);
 
   const movePart = useCallback((partId: string, x: number, y: number) => {
-    setDoc((prev) =>
-      prev ? { ...prev, parts: prev.parts.map((p) => (p.id === partId ? { ...p, x, y } : p)) } : prev,
-    );
+    setDoc((prev) => prev ? movePartDoc(prev, partId, x, y) : prev);
   }, []);
 
   const resizePart = useCallback((partId: string, w: number, h: number) => {
@@ -181,6 +232,14 @@ export function Editor() {
   const addPartToScreen = useCallback(
     (kind: Kind, screenId: string, x?: number, y?: number) => {
       if (!doc) return;
+      const existing = existingChrome(doc, screenId, kind);
+      if (existing) {
+        setSelection({ type: "part", id: existing.id });
+        setNotice(t(doc.lang, "workspace.chromeExists"));
+        setInspectorTab("properties");
+        setPanel(null);
+        return;
+      }
       const part = defaultPart(doc.lang, screenId, kind, 0, 0);
       const placement = autoPlacePart(doc, screenId, part);
       part.x = x === undefined ? placement.x : snap(x);
@@ -199,6 +258,8 @@ export function Editor() {
       }
       update((d) => ({ ...d, parts: [...d.parts, part] }));
       setSelection({ type: "part", id: part.id });
+      setInspectorTab("properties");
+      setPanel(null);
     },
     [doc, update],
   );
@@ -240,7 +301,11 @@ export function Editor() {
       update((d) => ({
         ...d,
         screens: d.screens.filter((s) => s.id !== id),
-        parts: d.parts.filter((p) => p.screen !== id),
+        parts: d.parts.filter((p) => p.screen !== id).map((p) => ({
+          ...p,
+          link: p.link?.target === id ? undefined : p.link,
+          options: p.options?.map((o) => o.target === id ? { ...o, target: null } : o),
+        })),
       }));
       setSelection(null);
     },
@@ -253,7 +318,7 @@ export function Editor() {
         ...d,
         parts: d.parts
           .filter((p) => p.id !== id)
-          .map((p) => (p.presents === id ? { ...p, presents: undefined } : p)),
+          .map((p) => ({ ...p, presents: p.presents === id ? undefined : p.presents, parent: p.parent === id ? undefined : p.parent })),
       }));
       setSelection(null);
     },
@@ -265,11 +330,18 @@ export function Editor() {
       if (!doc) return;
       const part = doc.parts.find((p) => p.id === id);
       if (!part) return;
+      if (part.kind === "navBar" || part.kind === "tabBar") {
+        setNotice(t(doc.lang, "workspace.chromeExists"));
+        return;
+      }
       const copy = duplicatePart(part);
       copy.x = snap(part.x + 16);
       copy.y = snap(part.y + 16);
       copy.presents = undefined;
-      update((d) => ({ ...d, parts: [...d.parts, copy] }));
+      const children = doc.parts.filter((p) => p.parent === id).map((p) => ({
+        ...duplicatePart(p), parent: copy.id, x: p.x + copy.x - part.x, y: p.y + copy.y - part.y,
+      }));
+      update((d) => ({ ...d, parts: [...d.parts, copy, ...children] }));
       setSelection({ type: "part", id: copy.id });
     },
     [doc, update],
@@ -294,30 +366,40 @@ export function Editor() {
 
   const openJson = useCallback(
     async (file: File) => {
-      const parsed = parseProjectFile(await file.text());
-      if (!parsed) return;
-      commit(parsed.doc);
-      setSelection(null);
-      if (parsed.warnings.length > 0) setWarnings(parsed.warnings);
+      if (file.size > MAX_PROJECT_BYTES) {
+        setNotice(t(doc?.lang ?? "en", "workspace.openTooLarge"));
+        return;
+      }
+      try {
+        const parsed = parseProjectFile(await file.text());
+        if (!parsed) throw new Error("Invalid project");
+        commit(parsed.doc);
+        setSelection(null);
+        setWarnings(parsed.warnings);
+      } catch {
+        setNotice(t(doc?.lang ?? "en", "workspace.openError"));
+      }
     },
-    [commit],
+    [commit, doc?.lang],
   );
 
   const share = useCallback(async () => {
     if (!doc) return;
-    const link = await shareLink(doc, `${window.location.origin}${window.location.pathname}`);
     try {
-      await navigator.clipboard.writeText(link);
+      const link = await shareLink(doc, `${window.location.origin}${window.location.pathname}`);
+      try { await navigator.clipboard.writeText(link); }
+      catch { window.prompt(t(doc.lang, "toolbar.share"), link); }
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 1600);
     } catch {
-      window.prompt("Share link", link);
+      setNotice(t(doc.lang, "workspace.shareError"));
     }
-    setLinkCopied(true);
-    window.setTimeout(() => setLinkCopied(false), 1600);
   }, [doc]);
 
   /* ---- keyboard -------------------------------------------------------- */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (showPreview || showPrompt || overlayPanel) return;
       const target = e.target as HTMLElement;
       const typing =
         target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement;
@@ -350,15 +432,15 @@ export function Editor() {
         const step = (e.shiftKey ? 10 : 1) * 1;
         const dx = e.key === "ArrowLeft" ? -step : e.key === "ArrowRight" ? step : 0;
         const dy = e.key === "ArrowUp" ? -step : e.key === "ArrowDown" ? step : 0;
-        update((d) => ({
-          ...d,
-          parts: d.parts.map((p) => (p.id === selection.id ? { ...p, x: p.x + dx, y: p.y + dy } : p)),
-        }));
+        update((d) => {
+          const p = d.parts.find((part) => part.id === selection.id);
+          return p ? movePartDoc(d, p.id, p.x + dx, p.y + dy) : d;
+        });
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [doc, selection, undo, redo, deletePart, deleteScreen, duplicatePartById, update]);
+  }, [doc, selection, undo, redo, deletePart, deleteScreen, duplicatePartById, update, showPreview, showPrompt, overlayPanel]);
 
   if (!doc) {
     return (
@@ -370,60 +452,56 @@ export function Editor() {
 
   const lang: Lang = doc.lang;
   const previewScreenId = activeScreenId ?? doc.screens[0]?.id;
+  const activeScreen = doc.screens.find((screen) => screen.id === activeScreenId);
+  const selectFromNavigator = (next: Selection) => {
+    setSelection(next);
+    setInspectorTab("properties");
+    const screenId = next?.type === "screen" ? next.id : doc.parts.find((p) => p.id === next?.id)?.screen;
+    const screen = doc.screens.find((s) => s.id === screenId);
+    const bounds = document.querySelector(".canvas-host")?.getBoundingClientRect();
+    if (screen && bounds) setView((v) => ({ ...v, x: bounds.width / 2 - (screen.x + 393 / 2) * v.k, y: bounds.height / 2 - (screen.y + 852 / 2) * v.k }));
+  };
 
   return (
-    <div className="editor sc-font" data-scheme="light">
-      <GlassSurface radius={0} refraction={false} className="editor-toolbar">
-        <div className="toolbar-inner">
-          <span className="toolbar-brand">
-            <SfIcon name="sparkles" size={18} />
-            {t(lang, "app.name")}
-          </span>
+    <div className="editor sc-font" data-scheme="light" data-panel={panel ?? ""}>
+      <header className="workspace-toolbar" inert={!!overlayPanel}>
+        <div className="workspace-brand">
+          <span className="workspace-logo"><SfIcon name="square.stack" size={20} /></span>
+          <div><strong>SwiftUI Canvas</strong><span className="development-label" title={t(lang, "workspace.developmentHint")}>{t(lang, "workspace.development")}</span></div>
+          <details className="workspace-menu">
+            <summary aria-label={t(lang, "workspace.file")} title={t(lang, "workspace.file")}><SfIcon name="chevron.down" size={13} /></summary>
+            <div className="workspace-menu-content" onClick={(e) => {
+              if ((e.target as HTMLElement).closest("button, a")) e.currentTarget.closest("details")?.removeAttribute("open");
+            }}>
+              <button type="button" onClick={saveJson}><SfIcon name="doc.text" size={15} />{t(lang, "toolbar.save")}</button>
+              <button type="button" onClick={() => fileRef.current?.click()}><SfIcon name="folder" size={15} />{t(lang, "toolbar.open")}</button>
+              <button type="button" onClick={share}><SfIcon name="square.and.arrow.up" size={15} />{linkCopied ? t(lang, "toolbar.linkCopied") : t(lang, "toolbar.share")}</button>
+              <label>{t(lang, "workspace.language")}<select value={lang} onChange={(e) => update((d) => ({ ...d, lang: e.target.value as Lang }))}>
+                {LANGS.map((l) => <option value={l} key={l}>{LANG_NAMES[l]}</option>)}
+              </select></label>
+              <Link to="/components">{t(lang, "toolbar.components")}<SfIcon name="arrow.up.right" size={12} /></Link>
+              <Link to="/glass-lab">{t(lang, "toolbar.lab")}<SfIcon name="arrow.up.right" size={12} /></Link>
+              <Link to="/compare">{t(lang, "toolbar.compare")}<SfIcon name="arrow.up.right" size={12} /></Link>
+            </div>
+          </details>
+        </div>
+        <div className="workspace-history">
+          <button type="button" className="tool-icon" title={`${t(lang, "toolbar.undo")} (⌘Z)`} aria-label={t(lang, "toolbar.undo")} onClick={undo} disabled={past.current.length === 0}><SfIcon name="arrow.uturn.backward" size={18} /></button>
+          <button type="button" className="tool-icon" title={`${t(lang, "toolbar.redo")} (⇧⌘Z)`} aria-label={t(lang, "toolbar.redo")} onClick={redo} disabled={future.current.length === 0}><SfIcon name="arrow.uturn.forward" size={18} /></button>
+        </div>
+        <div className="workspace-document">
           <input
             className="toolbar-title"
             value={doc.title}
             aria-label={t(lang, "inspector.title")}
             onChange={(e) => {
               const value = e.target.value;
-              setDoc((prev) => (prev ? { ...prev, title: value } : prev));
-            }}
-            onBlur={() => {
-              /* title edits commit as one step via the next update; the
-                 live value is already saved by autosave */
+              update((prev) => ({ ...prev, title: value }));
             }}
           />
-          <span className="toolbar-sep" />
-          <button type="button" className="toolbar-button" onClick={undo} disabled={past.current.length === 0}>
-            {t(lang, "toolbar.undo")}
-          </button>
-          <button type="button" className="toolbar-button" onClick={redo} disabled={future.current.length === 0}>
-            {t(lang, "toolbar.redo")}
-          </button>
-          <button type="button" className="toolbar-button" onClick={addScreen}>
-            {t(lang, "toolbar.addScreen")}
-          </button>
-          <button type="button" className="toolbar-button" onClick={doTidy}>
-            {t(lang, "toolbar.tidy")}
-          </button>
-          <span className="segmented-mini" role="group" aria-label="Language">
-            {LANGS.map((l) => (
-              <button
-                key={l}
-                type="button"
-                data-selected={lang === l ? "true" : "false"}
-                onClick={() => update((d) => ({ ...d, lang: l }))}
-              >
-                {LANG_NAMES[l]}
-              </button>
-            ))}
-          </span>
-          <span className="toolbar-spacer" />
-          <button type="button" className="toolbar-button" onClick={saveJson}>
-            {t(lang, "toolbar.save")}
-          </button>
-          <button type="button" className="toolbar-button" onClick={() => fileRef.current?.click()}>
-            {t(lang, "toolbar.open")}
-          </button>
+          <span><SfIcon name="rectangle.portrait" size={12} /> iPhone <span className="document-separator">/</span> iOS 26</span>
+        </div>
+        <div className="workspace-actions">
           <input
             ref={fileRef}
             type="file"
@@ -435,26 +513,26 @@ export function Editor() {
               e.target.value = "";
             }}
           />
-          <button type="button" className="toolbar-button" onClick={share}>
-            {linkCopied ? t(lang, "toolbar.linkCopied") : t(lang, "toolbar.share")}
+          <button type="button" className="tool-icon share-button" onClick={share} aria-label={linkCopied ? t(lang, "toolbar.linkCopied") : t(lang, "toolbar.share")} title={t(lang, "toolbar.share")}>
+            <SfIcon name={linkCopied ? "checkmark" : "square.and.arrow.up"} size={18} />
           </button>
-          <a className="toolbar-button" href="/components">
-            {t(lang, "toolbar.components")}
-          </a>
-          <a className="toolbar-button" href="/glass-lab">
-            {t(lang, "toolbar.lab")}
-          </a>
-          <a className="toolbar-button" href="/compare">
-            {t(lang, "toolbar.compare")}
-          </a>
-          <button type="button" className="toolbar-button" onClick={() => setShowPrompt(true)}>
-            {t(lang, "toolbar.prompt")}
+          <button type="button" className="toolbar-button" aria-label={t(lang, "toolbar.prompt")} title={t(lang, "toolbar.prompt")} onClick={() => setShowPrompt(true)}>
+            <SfIcon name="curlybraces" size={16} /><span>{t(lang, "toolbar.prompt")}</span>
           </button>
-          <button type="button" className="toolbar-button primary" onClick={() => setShowPreview(true)}>
-            {t(lang, "toolbar.preview")}
+          <button type="button" className="toolbar-button primary" aria-label={t(lang, "toolbar.preview")} title={t(lang, "toolbar.preview")} onClick={() => setShowPreview(true)}>
+            <SfIcon name="play" size={13} /><span>{t(lang, "toolbar.preview")}</span>
           </button>
         </div>
-      </GlassSurface>
+      </header>
+      <div className="workspace-bar" inert={!!overlayPanel}>
+        <button type="button" className="panel-toggle" aria-expanded={viewport.compact ? panel === "navigator" : panel !== "navigator"} onClick={() => setPanel(panel === "navigator" ? null : "navigator")}>
+          <SfIcon name="sidebar.left" size={17} />{t(lang, "workspace.navigator")}
+        </button>
+        <div className="workspace-breadcrumb"><SfIcon name="square.stack" size={13} /><span>{doc.title}</span><SfIcon name="chevron.right" size={10} /><strong>{activeScreen?.name}</strong></div>
+        <button type="button" className="panel-toggle" aria-expanded={viewport.narrow ? panel === "inspector" : panel !== "inspector"} onClick={() => setPanel(panel === "inspector" ? null : "inspector")}>
+          {t(lang, "workspace.inspector")}<SfIcon name="sidebar.right" size={17} />
+        </button>
+      </div>
 
       {warnings.length > 0 ? (
         <div className="warnings-banner sc-font" role="alert">
@@ -468,12 +546,25 @@ export function Editor() {
       ) : null}
 
       <div className="editor-main">
-        <Palette lang={lang} onAdd={(kind) => activeScreenId && addPartToScreen(kind, activeScreenId)} />
+        {panel ? <button type="button" className="panel-scrim" aria-label={t(lang, "prompt.close")} onClick={() => setPanel(null)} /> : null}
+        <aside className="workspace-sidebar" inert={!!overlayPanel && panel !== "navigator"}>
+          <div className="panel-mobile-head">{t(lang, "workspace.navigator")}<button type="button" aria-label={t(lang, "prompt.close")} onClick={() => setPanel(null)}><SfIcon name="xmark" size={16} /></button></div>
+          <Navigator doc={doc} lang={lang} selection={selection} onSelect={selectFromNavigator} />
+          <Palette lang={lang} onAdd={(kind) => activeScreenId && addPartToScreen(kind, activeScreenId)} />
+        </aside>
+        <main className="canvas-column" inert={!!overlayPanel}>
+          <div className="canvas-heading">
+            <span><SfIcon name="rectangle.portrait" size={14} />393 × 852 <span className="canvas-unit">pt</span></span>
+            <div>
+              <button type="button" onClick={doTidy}><SfIcon name="slider.horizontal.3" size={14} />{t(lang, "toolbar.tidy")}</button>
+              <button type="button" onClick={addScreen}><SfIcon name="plus" size={14} />{t(lang, "toolbar.addScreen")}</button>
+            </div>
+          </div>
         <Canvas
           doc={doc}
           lang={lang}
           selection={selection}
-          onSelect={setSelection}
+          onSelect={(next) => { setSelection(next); setInspectorTab("properties"); }}
           view={view}
           onViewChange={setView}
           onDragStart={onDragStart}
@@ -484,7 +575,15 @@ export function Editor() {
           onDropKind={(kind, screenId, x, y) => addPartToScreen(kind, screenId, x, y)}
           onRenameScreen={(screen: Screen) => setSelection({ type: "screen", id: screen.id })}
         />
-        <div className="editor-side">
+        </main>
+        <aside className="editor-side" inert={!!overlayPanel && panel !== "inspector"}>
+          <div className="panel-mobile-head">{t(lang, "workspace.inspector")}<button type="button" aria-label={t(lang, "prompt.close")} onClick={() => setPanel(null)}><SfIcon name="xmark" size={16} /></button></div>
+          <div className="inspector-tabs" role="group" aria-label={t(lang, "workspace.inspector")}>
+            <button type="button" aria-pressed={inspectorTab === "properties"} onClick={() => setInspectorTab("properties")}>{t(lang, "workspace.properties")}</button>
+            <button type="button" aria-pressed={inspectorTab === "appearance"} onClick={() => setInspectorTab("appearance")}>{t(lang, "workspace.appearance")}</button>
+          </div>
+          <div className="inspector-scroll">
+          {inspectorTab === "properties" ?
           <Inspector
             doc={doc}
             lang={lang}
@@ -494,10 +593,17 @@ export function Editor() {
             onDeleteScreen={deleteScreen}
             onDeletePart={deletePart}
             onDuplicatePart={duplicatePartById}
-          />
-          <ThemePanel doc={doc} lang={lang} update={update} />
-        </div>
+          /> :
+          <ThemePanel doc={doc} lang={lang} update={update} />}
+          </div>
+        </aside>
       </div>
+      <footer className="workspace-status">
+        <span className={saveError ? "save-error" : ""}><SfIcon name={saveError ? "exclamationmark.triangle" : "checkmark"} size={12} />{t(lang, saveError ? "workspace.saveError" : "workspace.saved")}</span>
+        <span className="workspace-shortcuts">{t(lang, "workspace.hint")}</span>
+        <span>{doc.screens.length} {t(lang, "inspector.screens")} · {doc.parts.length} {t(lang, "inspector.parts")}</span>
+      </footer>
+      {notice ? <div className="workspace-notice" role="status">{notice}</div> : null}
 
       {showPrompt ? (
         <PromptPanel doc={doc} screenId={activeScreenId ?? null} onClose={() => setShowPrompt(false)} />

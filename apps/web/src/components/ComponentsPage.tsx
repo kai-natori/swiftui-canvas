@@ -1,4 +1,5 @@
 import { useMemo, useState, type CSSProperties } from "react";
+import { Link } from "@tanstack/react-router";
 
 import {
   LANGS,
@@ -111,9 +112,9 @@ function CatalogCard({
           <span className="catalog-kind-id">{entry.kind}</span>
         </p>
         <p className="catalog-desc">{t(lang, entry.descKey)}</p>
-        <a
+        <Link
           className="catalog-add"
-          href="/"
+          to="/"
           onClick={() => {
             try {
               stashPendingPart(window.localStorage, entry.kind as Kind);
@@ -124,7 +125,7 @@ function CatalogCard({
         >
           <SfIcon name="plus" size={13} />
           {t(lang, "catalog.addToEditor")}
-        </a>
+        </Link>
       </div>
     </article>
   );
@@ -163,12 +164,12 @@ export function ComponentsPage() {
             {t(lang, "app.name")}
           </span>
           <span className="toolbar-sep" />
-          <a className="toolbar-button" href="/">
+          <Link className="toolbar-button" to="/">
             {t(lang, "toolbar.editor")}
-          </a>
-          <a className="toolbar-button" href="/glass-lab">
+          </Link>
+          <Link className="toolbar-button" to="/glass-lab">
             {t(lang, "toolbar.lab")}
-          </a>
+          </Link>
           <span className="toolbar-spacer" />
           <span className="segmented-mini" role="group" aria-label="Appearance">
             {(["light", "dark"] as Scheme[]).map((s) => (

@@ -17,9 +17,11 @@ SSR, OG or server functions are ever needed, the same app can move to
 Cloudflare Workers without a migration. The app runs Start in **SPA mode
 with static prerendering** (no server functions, no server loaders), so
 the production artifact is static (`dist/client/`) and can also be
-hosted on GitHub Pages (Nitro `github_pages` preset; `index.html` copied
-to `404.html`, `.nojekyll`, base path set for project pages) — although
-the primary host is Cloudflare **Workers** (owner decision 2026-11-20, superseding Pages — same Worker shape as twiceword / natori-inn), since GitHub Actions are not used.
+hosted on GitHub Pages. The later `prepare-github-pages` change uses
+Vite's base path and TanStack Router's basepath, copies the SPA shell to
+static route entry points, and adds `404.html` and `.nojekyll`; no Nitro
+preset is used. The owner now plans a manual GitHub Pages publication.
+Cloudflare **Workers**, the original hosting choice, remains available.
 
 ## D3. Document model
 As specified in `specs/document-model`. One JSON shape is simultaneously

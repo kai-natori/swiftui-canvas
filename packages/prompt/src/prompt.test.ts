@@ -31,6 +31,19 @@ function fixture(): Doc {
 }
 
 describe("buildPrompt", () => {
+  it("describes container offsets and image assets without inserting image bytes", () => {
+    const doc = newDoc("en");
+    const box = { ...defaultPart("en", doc.screens[0]!.id, "box", 16, 200), label: "Photo group" };
+    const image = { ...defaultPart("en", box.screen, "image", 32, 224), parent: box.id, image: "data:image/png;base64,aGVsbG8=" };
+    doc.parts.push(box, image);
+    for (const lang of ["en", "ja", "zh"] as const) {
+      const text = buildPrompt(doc, { lang });
+      expect(text).toContain("Photo group");
+      expect(text).toContain("ZStack, x: 16, y: 24");
+      expect(text).toContain("JSON");
+      expect(text).not.toContain("base64");
+    }
+  });
   it("describes promoted control variants, bounds and missing optional values", () => {
     const doc = newDoc("en");
     for (const lang of ["en", "ja", "zh"] as const) {

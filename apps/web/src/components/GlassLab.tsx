@@ -1,4 +1,5 @@
 import { useMemo, useState, type CSSProperties } from "react";
+import { Link } from "@tanstack/react-router";
 
 import { ACCENT_PRESETS, newDoc } from "@swiftui-canvas/core";
 import { GlassButton, GlassTabBar, GlassToolbarButton } from "@swiftui-canvas/glass";
@@ -85,15 +86,15 @@ export function GlassLab() {
               </button>
             ))}
           </div>
-          <a className="lab-back" href="/">
+          <Link className="lab-back" to="/">
             ← Editor
-          </a>
-          <a className="lab-back" href="/components">
+          </Link>
+          <Link className="lab-back" to="/components">
             Components
-          </a>
-          <a className="lab-back" href="/compare">
+          </Link>
+          <Link className="lab-back" to="/compare">
             Compare glass
-          </a>
+          </Link>
           <div className="lab-accents" aria-label="Accent colour">
             {ACCENT_PRESETS.slice(0, 6).map((p) => (
               <button

@@ -170,7 +170,7 @@
 .sc-glass-button {
   border-radius: 999px;
   min-height: 50px;
-  padding: 0 22px;
+  padding: 0;
   font: inherit;
   font-size: 17px;
   font-weight: 600;
@@ -179,6 +179,14 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+}
+
+.sc-glass-button > .sc-glass__content {
+  align-items: stretch;
+}
+
+.sc-glass-button button {
+  padding: 0 20px;
 }
 
 .sc-glass-button[data-variant="glassProminent"] {

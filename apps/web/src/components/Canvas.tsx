@@ -1,14 +1,15 @@
 import {
   useEffect,
+  useEffectEvent,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
-  type WheelEvent as ReactWheelEvent,
 } from "react";
 
 import {
   SCREEN_H,
   SCREEN_W,
+  KIND_ORDER,
   partSize,
   type Doc,
   type Lang,
@@ -83,6 +84,28 @@ export function Canvas(props: CanvasProps) {
   const [guides, setGuides] = useState<{ screenId: string; snap: SnapResult } | null>(null);
   const [spaceHeld, setSpaceHeld] = useState(false);
 
+  const fitViewport = useEffectEvent(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    if (session.current || !doc.screens.length) return;
+    const rect = host.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return;
+    const minX = Math.min(...doc.screens.map((s) => s.x));
+    const minY = Math.min(...doc.screens.map((s) => s.y));
+    const maxX = Math.max(...doc.screens.map((s) => s.x + SCREEN_W));
+    const maxY = Math.max(...doc.screens.map((s) => s.y + SCREEN_H));
+    const k = Math.max(0.15, Math.min(0.9, (rect.width - 64) / (maxX - minX), (rect.height - 100) / (maxY - minY)));
+    props.onViewChange({ k, x: (rect.width - (maxX - minX) * k) / 2 - minX * k, y: (rect.height - (maxY - minY) * k) / 2 - minY * k - 8 });
+  });
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    const observer = new ResizeObserver(() => fitViewport());
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, [doc.screens.length, props.onViewChange]);
+
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.code === "Space" && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
@@ -92,11 +115,14 @@ export function Canvas(props: CanvasProps) {
     const up = (e: KeyboardEvent) => {
       if (e.code === "Space") setSpaceHeld(false);
     };
+    const blur = () => setSpaceHeld(false);
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
+    window.addEventListener("blur", blur);
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", blur);
     };
   }, []);
 
@@ -147,6 +173,7 @@ export function Canvas(props: CanvasProps) {
     const end = () => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", end);
+      window.removeEventListener("pointercancel", end);
       const was = session.current;
       session.current = null;
       setGuides(null);
@@ -155,6 +182,7 @@ export function Canvas(props: CanvasProps) {
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", end);
+    window.addEventListener("pointercancel", end);
   };
 
   const onBackgroundPointerDown = (e: ReactPointerEvent) => {
@@ -162,9 +190,9 @@ export function Canvas(props: CanvasProps) {
     beginSession({ mode: "pan", startClientX: e.clientX, startClientY: e.clientY, moved: false, viewStart: view });
   };
 
-  const onWheel = (e: ReactWheelEvent) => {
+  const onWheel = useEffectEvent((e: WheelEvent) => {
+    e.preventDefault();
     if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
       const rect = hostRef.current?.getBoundingClientRect();
       if (!rect) return;
       const factor = e.deltaY < 0 ? 1.08 : 1 / 1.08;
@@ -179,7 +207,13 @@ export function Canvas(props: CanvasProps) {
     } else {
       props.onViewChange({ ...view, x: view.x - e.deltaX, y: view.y - e.deltaY });
     }
-  };
+  });
+  useEffect(() => {
+    const host = hostRef.current;
+    const listener = (e: WheelEvent) => onWheel(e);
+    host?.addEventListener("wheel", listener, { passive: false });
+    return () => host?.removeEventListener("wheel", listener);
+  }, []);
 
   const fit = () => {
     const rect = hostRef.current?.getBoundingClientRect();
@@ -223,12 +257,11 @@ export function Canvas(props: CanvasProps) {
       ref={hostRef}
       className="canvas-host"
       onPointerDown={onBackgroundPointerDown}
-      onWheel={onWheel}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         e.preventDefault();
         const kind = e.dataTransfer.getData("application/x-sc-kind") as Part["kind"];
-        if (!kind) return;
+        if (!KIND_ORDER.includes(kind)) return;
         const w = toWorld(e.clientX, e.clientY);
         const screen = doc.screens.find(
           (s) => w.x >= s.x && w.x <= s.x + SCREEN_W && w.y >= s.y && w.y <= s.y + SCREEN_H,

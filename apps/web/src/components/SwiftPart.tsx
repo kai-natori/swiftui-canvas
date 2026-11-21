@@ -11,6 +11,8 @@ import {
 import { GlassAlert, GlassSurface } from "@swiftui-canvas/glass";
 
 import { SfIcon } from "~/lib/symbols";
+import { t } from "~/lib/i18n";
+import { INTERACTIVE_KINDS, InteractivePart } from "./InteractivePart";
 
 /* SwiftPart — renders one core Part as its iOS counterpart (task: the
  * SwiftPart-style renderer for all 24 kinds). Chrome kinds (navBar,
@@ -62,6 +64,9 @@ export interface SwiftPartProps {
   /** Preview mode: a nav bar shows a glass back button when true. */
   canGoBack?: boolean;
   onBack?: () => void;
+  onChange?: (id: string, patch: Partial<Part>) => void;
+  onInput?: (id: string, value: string) => void;
+  inputValue?: string;
 }
 
 const label = "var(--sc-label)";
@@ -80,6 +85,9 @@ export function SwiftPart(props: SwiftPartProps) {
   const w = part.w ?? size.w;
   const h = part.h ?? size.h;
   const accent = ui.accent;
+  if (props.onChange && INTERACTIVE_KINDS.has(part.kind)) {
+    return <InteractivePart {...props} width={w} height={h} />;
+  }
   const stop = (e: MouseEvent) => {
     if (props.onTap) {
       e.stopPropagation();
@@ -99,7 +107,7 @@ export function SwiftPart(props: SwiftPartProps) {
             <div style={{ width: 60, display: "flex", justifyContent: "flex-start" }}>
               {props.canGoBack ? (
                 <GlassSurface radius={999} width={44} height={44} className="sc-toolbar-button">
-                  <button type="button" aria-label="Back" onClick={props.onBack} style={glassBtnInner}>
+                  <button type="button" aria-label={t(props.doc.lang, "preview.back")} onClick={props.onBack} style={glassBtnInner}>
                     <SfIcon name="chevron.left" size={20} />
                   </button>
                 </GlassSurface>
@@ -121,7 +129,7 @@ export function SwiftPart(props: SwiftPartProps) {
             </div>
           </div>
           {large ? (
-            <div style={{ position: "absolute", left: 0, bottom: 4, fontSize: 34, fontWeight: 700, letterSpacing: 0.3, color: label }}>
+            <div style={{ position: "absolute", left: 16, right: 16, bottom: 4, fontSize: 34, fontWeight: 700, letterSpacing: -0.6, color: label, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {part.label}
             </div>
           ) : null}
@@ -227,9 +235,9 @@ export function SwiftPart(props: SwiftPartProps) {
 
     case "link":
       return (
-        <span onClick={stop} style={{ color: accent, fontSize: 17, cursor: props.onTap ? "pointer" : "default", display: "inline-flex", alignItems: "center", height: h }}>
+        <button type="button" onClick={stop} style={{ border: 0, padding: 0, background: "transparent", fontFamily: "inherit", color: accent, fontSize: 17, cursor: props.onTap ? "pointer" : "default", display: "inline-flex", alignItems: "center", height: h }}>
           {part.label}
-        </span>
+        </button>
       );
 
     case "textField":
@@ -359,6 +367,7 @@ export function SwiftPart(props: SwiftPartProps) {
     }
 
     case "image":
+      if (part.image) return <img src={part.image} alt={part.label} width={w} height={h} style={{ display: "block", objectFit: "cover", borderRadius: 12 }} />;
       return (
         <div style={{ width: w, height: h, borderRadius: 12, background: "linear-gradient(140deg,#8ec5fc 0%,#a18cd1 55%,#fbc2eb 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,.9)" }}>
           <SfIcon name={part.icon ?? "photo"} size={40} />
@@ -367,16 +376,17 @@ export function SwiftPart(props: SwiftPartProps) {
 
     case "list": {
       const opts = part.options ?? [];
+      if (!opts.length) return <div role="status" style={{ width: w, height: h, display: "grid", placeItems: "center", color: secondary, fontSize: 15 }}>{t(props.doc.lang, "control.noResults")}</div>;
       const inset = v === "insetGrouped";
       return (
         <div style={{ width: w, height: h, background: inset ? panel : "transparent", borderRadius: inset ? 12 : 0, overflow: "hidden" }}>
           {opts.map((o, i) => (
-            <div key={i} onClick={() => props.onOptionTap?.(part, i)} style={{ height: 44, display: "flex", alignItems: "center", gap: 12, padding: "0 16px", position: "relative", cursor: props.onOptionTap ? "pointer" : "default" }}>
+            <button type="button" key={i} onClick={() => props.onOptionTap?.(part, i)} style={{ width: "100%", border: 0, background: "transparent", textAlign: "left", fontFamily: "inherit", height: 44, display: "flex", alignItems: "center", gap: 12, padding: "0 16px", position: "relative", cursor: props.onOptionTap ? "pointer" : "default" }}>
               {i > 0 ? <div style={{ position: "absolute", left: inset && o.icon ? 48 : 16, right: 0, top: 0, height: 0.5, background: "var(--sc-separator)" }} /> : null}
               {o.icon ? <span style={{ color: accent, display: "flex" }}><SfIcon name={o.icon} size={20} /></span> : null}
               <span style={{ fontSize: 17, color: label, flex: 1 }}>{o.label}</span>
               <span style={{ color: secondary, display: "flex" }}><SfIcon name="chevron.right" size={14} /></span>
-            </div>
+            </button>
           ))}
         </div>
       );

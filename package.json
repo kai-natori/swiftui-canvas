@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
+    "build:pages": "pnpm --filter @swiftui-canvas/web build:pages",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "lint": "biome lint ."

@@ -175,7 +175,12 @@ export interface Option {
   icon?: string | null;
   /** Screen id this option navigates to (tab rows, list rows). */
   target?: string | null;
+  role?: "default" | "search";
 }
+
+/** Old projects used the search symbol before explicit tab roles existed. */
+export const isSearchTab = (option: Option): boolean =>
+  option.role === "search" || (option.role === undefined && option.icon === "magnifyingglass");
 
 export interface Link {
   /** A screen id, or BACK_TARGET. */
@@ -203,6 +208,10 @@ export interface Part {
   displayedComponents?: "date" | "time" | "both";
   date?: string;
   color?: string;
+  /** Embedded raster image, preserved in JSON and share links. */
+  image?: string;
+  /** Flat container group. Coordinates remain relative to the screen. */
+  parent?: string;
   w?: number;
   h?: number;
   /** Free-form behaviour note; travels into the prompt. */

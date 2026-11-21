@@ -1,4 +1,5 @@
 import type { Doc } from "./model";
+import { MAX_PROJECT_BYTES } from "./storage";
 import { validateDoc } from "./validate";
 
 /* Share links carry the whole document in the URL hash, deflated and
@@ -10,6 +11,30 @@ import { validateDoc } from "./validate";
  */
 
 export const SHARE_PREFIX = "#sc=";
+export const MAX_SHARE_LENGTH = 1_000_000;
+
+class ShareSizeError extends Error {}
+
+async function readBounded(stream: ReadableStream<Uint8Array>): Promise<string> {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let size = 0;
+  let text = "";
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) return text + decoder.decode();
+      size += value.byteLength;
+      if (size > MAX_PROJECT_BYTES) {
+        await reader.cancel();
+        throw new ShareSizeError("Shared project exceeds the size limit");
+      }
+      text += decoder.decode(value, { stream: true });
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
 
 function toBase64Url(bytes: Uint8Array): string {
   let s = "";
@@ -33,26 +58,28 @@ async function inflate(bytes: Uint8Array): Promise<string> {
   if (typeof DecompressionStream !== "undefined") {
     try {
       const stream = new Blob([bytes as BlobPart]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
-      return await new Response(stream).text();
-    } catch {
+      return await readBounded(stream);
+    } catch (error) {
+      if (error instanceof ShareSizeError) throw error;
       /* not a deflated payload — fall through to the raw reading */
     }
   }
+  if (bytes.byteLength > MAX_PROJECT_BYTES) throw new ShareSizeError("Shared project exceeds the size limit");
   return new TextDecoder().decode(bytes);
 }
 
 export async function encodeDoc(doc: Doc): Promise<string> {
-  return toBase64Url(await deflate(JSON.stringify(doc)));
+  const json = JSON.stringify(doc);
+  if (json.length > MAX_PROJECT_BYTES || new TextEncoder().encode(json).byteLength > MAX_PROJECT_BYTES) {
+    throw new ShareSizeError("Project exceeds the size limit");
+  }
+  const payload = toBase64Url(await deflate(json));
+  if (payload.length > MAX_SHARE_LENGTH) throw new ShareSizeError("Share link exceeds the size limit");
+  return payload;
 }
 
 export async function decodeDoc(payload: string): Promise<Doc | null> {
-  try {
-    const json = await inflate(fromBase64Url(payload));
-    const { doc, errors } = validateDoc(JSON.parse(json) as unknown, "share link");
-    return errors.length === 0 ? doc : null;
-  } catch {
-    return null;
-  }
+  return (await decodeDocDetailed(payload))?.doc ?? null;
 }
 
 export async function shareLink(doc: Doc, base: string): Promise<string> {
@@ -72,6 +99,7 @@ export interface DecodedDoc {
 /** Like decodeDoc, but keeps the tolerant-ingress repair warnings so the
  *  caller can surface them (persistence-sharing spec, task 7.2). */
 export async function decodeDocDetailed(payload: string): Promise<DecodedDoc | null> {
+  if (payload.length > MAX_SHARE_LENGTH) return null;
   try {
     const json = await inflate(fromBase64Url(payload));
     const { doc, errors, warnings } = validateDoc(JSON.parse(json) as unknown, "share link");

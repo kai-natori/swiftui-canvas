@@ -9,6 +9,7 @@ import {
   type Doc,
   type Part,
   type Screen,
+  partSize,
 } from "@swiftui-canvas/core";
 
 import { SfIcon } from "~/lib/symbols";
@@ -37,6 +38,9 @@ export interface ScreenViewProps {
   onOptionTap?: (part: Part, index: number) => void;
   canGoBack?: boolean;
   onBack?: () => void;
+  onChange?: (id: string, patch: Partial<Part>) => void;
+  onInput?: (id: string, value: string) => void;
+  inputValues?: Record<string, string>;
   /** Canvas-only: attributes/handlers for the positioned part wrapper. */
   partWrapperProps?: (part: Part) => {
     onPointerDown?: (e: PointerEvent<HTMLDivElement>) => void;
@@ -85,6 +89,7 @@ export function ScreenView(props: ScreenViewProps) {
   const ui = partUi(doc.theme);
   const dark = doc.theme.scheme === "dark";
   const parts = partsOf(doc, screen.id).filter((p) => !props.hiddenKinds?.has(p.kind));
+  const query = parts.filter((p) => p.kind === "searchField").map((p) => props.inputValues?.[p.id] ?? "").join(" ").trim().toLocaleLowerCase();
 
   return (
     <div
@@ -113,16 +118,25 @@ export function ScreenView(props: ScreenViewProps) {
               position: "absolute",
               left: part.x,
               top: part.y,
-              zIndex: part.kind === "tabBar" ? 30 : part.kind === "navBar" ? 25 : 10,
+              width: part.w ?? partSize(part.kind, part).w,
+              height: part.h ?? partSize(part.kind, part).h,
+              zIndex: part.kind === "box" ? 1 : part.kind === "menu" ? 35 : part.kind === "tabBar" ? 30 : part.kind === "navBar" ? 25 : 10,
               ...wrap?.style,
             }}
           >
             <SwiftPart
-              part={part}
+              part={part.kind === "list" && query ? { ...part, options: part.options?.filter((o) => o.label.toLocaleLowerCase().includes(query)) } : part}
               doc={doc}
               ui={ui}
               onTap={props.onTap}
-              onOptionTap={props.onOptionTap}
+              onOptionTap={part.kind === "list" && query ? (_, index) => {
+                const filtered = part.options?.filter((o) => o.label.toLocaleLowerCase().includes(query));
+                const original = part.options?.indexOf(filtered?.[index] as NonNullable<Part["options"]>[number]);
+                if (original !== undefined && original >= 0) props.onOptionTap?.(part, original);
+              } : props.onOptionTap}
+              onChange={props.onChange}
+              onInput={props.onInput}
+              inputValue={props.inputValues?.[part.id]}
               canGoBack={props.canGoBack}
               onBack={props.onBack}
             />

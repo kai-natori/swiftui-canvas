@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   BACK_TARGET,
   KIND_VARIANTS,
@@ -6,6 +7,7 @@ import {
   TRANSITIONS,
   partsOf,
   variantOf,
+  isSearchTab,
   type Doc,
   type Lang,
   type Transition,
@@ -16,6 +18,7 @@ import {
 import { KIND_NAMES, TRANSITION_NAMES, VARIANT_NAMES, t } from "~/lib/i18n";
 import { SYMBOL_NAMES, SfIcon } from "~/lib/symbols";
 import type { Selection } from "./Canvas";
+import { movePartDoc } from "~/lib/editor-logic";
 
 /* Inspector (task 4.3) — Xcode-preview-style property editing for the
  * selected part, screen, or (with no selection) the document. All
@@ -72,7 +75,10 @@ export function Inspector(props: InspectorProps) {
 
 function PartInspector(props: InspectorProps & { part: Part }) {
   const { doc, lang, part, update } = props;
-  const patch = (p: Partial<Part>) => update((d) => ({ ...d, parts: d.parts.map((x) => (x.id === part.id ? { ...x, ...p } : x)) }));
+  const patch = (p: Partial<Part>) => update((d) => {
+    const moved = p.x !== undefined || p.y !== undefined ? movePartDoc(d, part.id, p.x ?? part.x, p.y ?? part.y) : d;
+    return { ...moved, parts: moved.parts.map((x) => (x.id === part.id ? { ...x, ...p } : x)) };
+  });
   const screens = doc.screens;
   const presentables = part.screen
     ? partsOf(doc, part.screen).filter((p) => (p.kind === "alert" || p.kind === "sheet") && p.id !== part.id)
@@ -89,6 +95,20 @@ function PartInspector(props: InspectorProps & { part: Part }) {
         <input className="inspector-input" value={part.label} onChange={(e) => patch({ label: e.target.value })} />
       </Field>
 
+      {part.kind === "image" ? <ImageField key={part.id} part={part} lang={lang} onChange={(image) => patch({ image })} /> : null}
+      {part.kind === "box" ? <p className="inspector-hint">{t(lang, "container.hint")}</p> : null}
+      {!["box", "navBar", "tabBar", "sheet", "alert"].includes(part.kind) && doc.parts.some((p) => p.screen === part.screen && p.kind === "box") ? (
+        <Field label={t(lang, "container.parent")}>
+          <select className="inspector-select" aria-label={t(lang, "container.parent")} value={part.parent ?? ""} onChange={(e) => {
+            const parent = doc.parts.find((p) => p.id === e.target.value);
+            patch({ parent: parent?.id, ...(parent ? { x: parent.x + 16, y: parent.y + 16 } : {}) });
+          }}>
+            <option value="">{t(lang, "inspector.none")}</option>
+            {doc.parts.filter((p) => p.kind === "box" && p.screen === part.screen).map((p) => <option key={p.id} value={p.id}>{p.label || t(lang, "container.parent")}</option>)}
+          </select>
+        </Field>
+      ) : null}
+
       {(part.kind === "card" || part.kind === "alert" || part.kind === "sheet" || part.kind === "contentUnavailable" || part.kind === "textField" || part.kind === "secureField") ? (
         <Field label={t(lang, "inspector.supporting")}>
           <input
@@ -103,7 +123,7 @@ function PartInspector(props: InspectorProps & { part: Part }) {
         <Field label={t(lang, "inspector.icon")}>
           <span className="inspector-icon-row">
             <span className="inspector-icon-preview">
-              <SfIcon name={part.icon} size={18} />
+              <SfIcon name={part.icon || "minus"} size={18} />
             </span>
             <select
               className="inspector-select"
@@ -189,6 +209,13 @@ function PartInspector(props: InspectorProps & { part: Part }) {
           ) : null}
           {part.options.map((o, i) => (
             <div key={i} className="inspector-option">
+              {part.kind === "tabBar" ? <select className="inspector-select" aria-label={t(lang, "tab.role")}
+                value={isSearchTab(o) ? "search" : "default"} onChange={(e) => patch({
+                  options: part.options?.map((option, index) => index === i ? { ...option, role: e.target.value as "default" | "search" } : option),
+                })}>
+                <option value="default">{t(lang, "tab.default")}</option>
+                <option value="search">{t(lang, "tab.search")}</option>
+              </select> : null}
               <input
                 className="inspector-input"
                 aria-label={t(lang, "inspector.optionLabel")}
@@ -308,8 +335,9 @@ function PartInspector(props: InspectorProps & { part: Part }) {
               <span>{k}</span>
               <input
                 type="number"
-                value={Math.round(part[k] ?? 0)}
-                onChange={(e) => patch({ [k]: Number(e.target.value) })}
+                value={Math.round(part[k] ?? (k === "w" || k === "h" ? partSize(part.kind, part)[k] : 0))}
+                min={k === "w" || k === "h" ? 1 : undefined}
+                onChange={(e) => patch({ [k]: k === "w" || k === "h" ? Math.max(1, Number(e.target.value)) : Number(e.target.value) })}
               />
             </label>
           ))}
@@ -324,6 +352,49 @@ function PartInspector(props: InspectorProps & { part: Part }) {
           {t(lang, "inspector.delete")}
         </button>
       </div>
+    </div>
+  );
+}
+
+function ImageField({ part, lang, onChange }: { part: Part; lang: Lang; onChange: (value: string | undefined) => void }) {
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const load = async (file: File) => {
+    setError(false);
+    if (!["image/png", "image/jpeg", "image/webp", "image/gif"].includes(file.type) || file.size > 10_000_000) {
+      setError(true);
+      return;
+    }
+    setLoading(true);
+    try {
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, 1200 / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Canvas unavailable");
+      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      bitmap.close();
+      const image = canvas.toDataURL("image/webp", 0.85);
+      if (image.length > 2_000_000) throw new Error("Image too large");
+      onChange(image);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
+    <div className="image-field">
+      {part.image ? <img src={part.image} alt={part.label} width={220} height={100} /> : null}
+      <label className="inspector-add image-upload">
+        {loading ? t(lang, "image.loading") : t(lang, "image.upload")}
+        <input type="file" aria-label={t(lang, "image.upload")} accept="image/png,image/jpeg,image/webp,image/gif" disabled={loading}
+          onChange={(e) => { const file = e.target.files?.[0]; if (file) void load(file); e.target.value = ""; }} />
+      </label>
+      {part.image ? <button type="button" className="inspector-add" onClick={() => onChange(undefined)}>{t(lang, "image.remove")}</button> : null}
+      {error ? <p className="field-error" role="alert">{t(lang, "image.error")}</p> : null}
     </div>
   );
 }

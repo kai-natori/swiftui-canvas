@@ -1,7 +1,6 @@
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { LANGS, type Doc, type Lang } from "@swiftui-canvas/core";
-import { GlassSurface } from "@swiftui-canvas/glass";
 import { buildPrompt } from "@swiftui-canvas/prompt";
 
 import { LANG_NAMES, t } from "~/lib/i18n";
@@ -21,6 +20,13 @@ export function PromptPanel({
   const [lang, setLang] = useState<Lang>(doc.lang);
   const [scope, setScope] = useState<"whole" | "screen">(screenId ? "screen" : "whole");
   const [copied, setCopied] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  useLayoutEffect(() => {
+    const dialog = dialogRef.current;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    dialog?.showModal();
+    return () => { dialog?.close(); previousFocus?.focus(); };
+  }, []);
   const uiLang = doc.lang;
 
   const prompt = useMemo(
@@ -41,8 +47,9 @@ export function PromptPanel({
   };
 
   return (
-    <div className="prompt-overlay" role="dialog" aria-label={t(uiLang, "prompt.title")}>
-      <GlassSurface radius={24} className="prompt-panel">
+    <dialog ref={dialogRef} className="prompt-overlay" aria-label={t(uiLang, "prompt.title")}
+      onCancel={(e) => { e.preventDefault(); onClose(); }}>
+      <div className="prompt-panel">
         <div className="prompt-head sc-font">
           <span className="prompt-title">{t(uiLang, "prompt.title")}</span>
           <span className="segmented-mini" role="group" aria-label={t(uiLang, "prompt.language")}>
@@ -73,8 +80,8 @@ export function PromptPanel({
             {t(uiLang, "prompt.close")}
           </button>
         </div>
-        <textarea className="prompt-text" readOnly value={prompt} />
-      </GlassSurface>
-    </div>
+        <textarea className="prompt-text" aria-label={t(uiLang, "prompt.title")} readOnly value={prompt} />
+      </div>
+    </dialog>
   );
 }

@@ -13,6 +13,7 @@ export interface KeyValueStorage {
 }
 
 export const STORAGE_KEY = "swiftui-canvas:doc:v1";
+export const MAX_PROJECT_BYTES = 20_000_000;
 
 export function saveDoc(storage: KeyValueStorage, doc: Doc, key: string = STORAGE_KEY): void {
   storage.setItem(key, JSON.stringify(doc));
@@ -46,6 +47,7 @@ export function projectFileName(doc: Doc): string {
 }
 
 export function parseProjectFile(text: string): LoadedDoc | null {
+  if (text.length > MAX_PROJECT_BYTES || new TextEncoder().encode(text).byteLength > MAX_PROJECT_BYTES) return null;
   try {
     const { doc, errors, warnings } = validateDoc(JSON.parse(text) as unknown, "project file");
     if (!doc || errors.length > 0) return null;

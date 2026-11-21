@@ -2,9 +2,37 @@ import { describe, expect, it } from "vitest";
 
 import { defaultPart, newDoc } from "@swiftui-canvas/core";
 
-import { autoPlacePart, duplicateScreenDoc, navigationArrows, snap, snapPosition, tidyScreen } from "./editor-logic";
+import { autoPlacePart, duplicateScreenDoc, existingChrome, movePartDoc, navigationArrows, snap, snapPosition, tidyScreen } from "./editor-logic";
 
 describe("editor logic", () => {
+  it("reuses existing screen chrome but allows ordinary components and bars on another screen", () => {
+    const doc = newDoc("en");
+    const screen = doc.screens[0]!.id;
+    expect(existingChrome(doc, screen, "navBar")?.kind).toBe("navBar");
+    expect(existingChrome(doc, screen, "tabBar")?.kind).toBe("tabBar");
+    expect(existingChrome(doc, screen, "button")).toBeUndefined();
+    expect(existingChrome(doc, "other", "navBar")).toBeUndefined();
+  });
+
+  it("moves container members together and preserves offsets through tidy and screen duplication", () => {
+    const doc = newDoc("en");
+    const screen = doc.screens[0]!.id;
+    const box = defaultPart("en", screen, "box", 16, 400);
+    const child = { ...defaultPart("en", screen, "text", 32, 424), parent: box.id };
+    doc.parts.push(box, child);
+    const moved = movePartDoc(doc, box.id, 32, 432);
+    expect(moved.parts.find((p) => p.id === child.id)).toMatchObject({ x: 48, y: 456 });
+    expect(doc.parts.find((p) => p.id === child.id)).toMatchObject({ x: 32, y: 424 });
+    const tidy = tidyScreen(moved, screen);
+    const tidyBox = tidy.parts.find((p) => p.id === box.id)!;
+    const tidyChild = tidy.parts.find((p) => p.id === child.id)!;
+    expect([tidyChild.x - tidyBox.x, tidyChild.y - tidyBox.y]).toEqual([16, 24]);
+    const copied = duplicateScreenDoc(tidy, screen);
+    const copyBox = copied.doc.parts.find((p) => p.screen === copied.screen.id && p.kind === "box")!;
+    const copyChild = copied.doc.parts.find((p) => p.screen === copied.screen.id && p.parent)!;
+    expect(copyChild.parent).toBe(copyBox.id);
+    expect(copyChild.parent).not.toBe(box.id);
+  });
   it("auto-places below starter content, not below the tab bar", () => {
     const doc = newDoc("en");
     const sid = doc.screens[0]!.id;
