@@ -31,6 +31,11 @@ offer a visible close control, support Escape and restore focus to the
 launching control. The preview close control SHALL remain above the
 device frame at both desktop and phone widths.
 
+#### Scenario: Closing a dialog by keyboard
+- **WHEN** the user opens preview or prompt and presses Escape
+- **THEN** the dialog closes and focus returns to its launching control
+- **AND** editor shortcuts do not mutate the design while the dialog is open
+
 ### Requirement: Search tab activation
 A tab option with `role: search` SHALL open a bottom search field and
 search the current destination screen's text, cards, image labels,
@@ -38,3 +43,9 @@ buttons, links and list rows. Legacy options with a magnifying-glass
 icon and no explicit role SHALL retain this behavior; `role: default`
 SHALL opt out. Cancel or Escape SHALL restore the previous screen and
 tab selection. Search state SHALL never persist to the edited document.
+
+#### Scenario: Searching and cancelling
+- **WHEN** the user selects a search tab, enters a matching query, and cancels
+- **THEN** matching screen content is shown while searching
+- **AND** cancellation restores the previous screen and selected tab
+- **AND** the saved design is unchanged

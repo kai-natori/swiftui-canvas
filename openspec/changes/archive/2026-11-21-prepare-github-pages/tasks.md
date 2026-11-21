@@ -18,4 +18,6 @@ Validation:
 - Production dependency audit reported no known advisories. A bounded
   scan found no common token/private-key patterns in the project source.
   This is a targeted release check, not a comprehensive security audit.
-- No branch was pushed and no public deployment was performed.
+- Validation itself did not push or publish. The owner subsequently
+  authorized source delivery to `main` (`13478ef`) and will handle
+  GitHub Pages publication separately; no public deployment was performed.

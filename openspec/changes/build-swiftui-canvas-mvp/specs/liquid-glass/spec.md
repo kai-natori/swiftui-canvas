@@ -28,8 +28,18 @@ by a brighter glass pill. It SHALL NOT be a full-width bar and SHALL NOT
 carry a top separator line. The home indicator belongs to the screen
 chrome, outside the bar.
 
+#### Scenario: Selecting a tab
+- **WHEN** the user selects a different tab
+- **THEN** the highlighted glass pill moves to that tab
+- **AND** the capsule retains its insets and does not cover the home indicator
+
 ### Requirement: Glass navigation chrome
 The navigation bar SHALL NOT render a full-width bar or separator.
 Leading and trailing actions SHALL be glass circle or capsule buttons;
 the title floats as text, with the large title kept in its iOS position
 when the large variant is used.
+
+#### Scenario: Showing a large navigation title
+- **WHEN** a large navigation bar includes leading or trailing actions
+- **THEN** the actions render as glass circles or capsules and the title
+  floats below them without a full-width separator

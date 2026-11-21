@@ -8,6 +8,11 @@ and restore it on load. The user SHALL be able to save the document as a
 JSON file (named from its title) and open such a file back into the
 editor. No account or server SHALL be involved.
 
+#### Scenario: Restoring a local design
+- **WHEN** the user edits a design and reloads the editor
+- **THEN** the saved screens and parts are restored from localStorage
+- **AND** saving and reopening its JSON restores the same design
+
 ### Requirement: Share links
 A share action SHALL produce a URL whose hash carries the whole document
 (`#sc=` + base64url of deflate-raw-compressed JSON). Opening such a URL
